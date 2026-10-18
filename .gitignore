@@ -12,6 +12,10 @@ Adaptive-Defense-Project.zip
 !.env.example
 .streamlit/secrets.toml
 *.log
+web/node_modules/
+web/dist/
+*.tsbuildinfo
+runtime/
 *.egg-info/
 build/
 dist/

@@ -1,5 +1,20 @@
 # Adaptive Defense
 
+## React web console
+
+The new React + FastAPI console provides a recorded WebSocket replay, traffic
+projection, decision inspector, SQLite analyst queue and benchmark cost controls.
+
+```powershell
+python -m pip install -r requirements-api.txt
+npm.cmd ci --prefix web
+npm.cmd run build --prefix web
+python serve_api.py
+```
+
+Open http://127.0.0.1:8000. See [console architecture and research boundaries](docs/WEB_CONSOLE.md).
+The Streamlit interface described below remains available as a legacy dashboard.
+
 **Zero-Day Attack Detection in NIDS With Deep Reinforcement Learning**
 
 A runnable research project combining a benign-trained deep autoencoder with a DQN threshold controller, supervised baselines, a rule controller, disjoint adaptation experiments, and a Streamlit dashboard.

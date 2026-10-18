@@ -16,3 +16,6 @@
 !runs/demo/*.csv
 !runs/demo/*.pkl
 !runs/demo/*.pt
+web/node_modules
+web/dist
+runtime

@@ -1,0 +1,14 @@
+services:
+  console:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - review-data:/app/runtime
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  review-data:
