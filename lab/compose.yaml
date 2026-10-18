@@ -1,0 +1,27 @@
+services:
+  target:
+    build: .
+    command: python server.py
+    networks: [isolated]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  collector:
+    build: .
+    command: sh -c 'tcpdump -Z root -i eth0 -U -w /capture/traffic.pcap tcp & pid=$$!; sleep 120; kill -INT $$pid; wait $$pid'
+    networks: [isolated]
+    volumes: ['./capture:/capture']
+    cap_drop: [ALL]
+    cap_add: [NET_RAW, NET_ADMIN]
+    security_opt: [no-new-privileges:true]
+  generator:
+    build: .
+    command: python client.py
+    network_mode: service:collector
+    depends_on: [target, collector]
+    volumes: ['./capture:/capture']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+networks:
+  isolated:
+    internal: true

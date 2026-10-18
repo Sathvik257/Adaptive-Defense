@@ -1,5 +1,12 @@
 # Adaptive Defense
 
+## Reusable research benchmark
+
+Install with `python -m pip install .`, then run `adaptive-benchmark --demo --output
+runs/loao`. The default uses five seeds and leaves each attack family out in turn.
+See [benchmark guide](docs/BENCHMARK.md), [dataset card](docs/DATASET_CARD.md),
+[model card](docs/MODEL_CARD.md), and [isolated lab](lab/README.md).
+
 ## React web console
 
 The new React + FastAPI console provides a recorded WebSocket replay, traffic

@@ -1,0 +1,36 @@
+{
+  "hardware": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+  "machine": "AMD64",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "onnxruntime": "1.24.4",
+  "provider": [
+    "CPUExecutionProvider"
+  ],
+  "threads": 1,
+  "precision": "float32",
+  "parity_max_abs_error": 1.7881393432617188e-07,
+  "scope": "AE reconstruction only; excludes preprocessing, anomaly reduction, DQN, capture and API",
+  "results": [
+    {
+      "batch_size": 1,
+      "iterations": 200,
+      "median_batch_ms": 0.0937,
+      "p95_batch_ms": 0.13932999999999995,
+      "flows_per_second": 9925.361283150707
+    },
+    {
+      "batch_size": 32,
+      "iterations": 200,
+      "median_batch_ms": 0.2265,
+      "p95_batch_ms": 0.2729049999999999,
+      "flows_per_second": 135470.0918021544
+    },
+    {
+      "batch_size": 256,
+      "iterations": 200,
+      "median_batch_ms": 1.1846,
+      "p95_batch_ms": 1.419215,
+      "flows_per_second": 238187.50473932654
+    }
+  ]
+}

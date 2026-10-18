@@ -10,6 +10,7 @@ for path in paths:
 files.extend((root/'web/src').rglob('*.*'))
 files.extend(root/'web'/name for name in ['package.json','package-lock.json','tsconfig.json','vite.config.ts','index.html'])
 files.extend(root/name for name in ['serve_api.py','requirements-api.txt','Dockerfile.web','compose.web.yaml'])
+files.extend(p for folder in ['lab','paper'] for p in (root/folder).rglob('*') if p.is_file() and not {'capture','__pycache__'} & set(p.parts))
 with ZipFile(root/"Adaptive-Defense-Project.zip","w",ZIP_DEFLATED) as archive:
     for file in files:
         archive.write(file,Path("Adaptive-Defense")/file.relative_to(root))

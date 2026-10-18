@@ -16,6 +16,7 @@ web/node_modules/
 web/dist/
 *.tsbuildinfo
 runtime/
+lab/capture/
 *.egg-info/
 build/
 dist/

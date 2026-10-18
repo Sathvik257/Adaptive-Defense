@@ -1,0 +1,203 @@
+{
+  "mode": "Synthetic demonstration",
+  "epochs": 20,
+  "episodes": 100,
+  "folds": 15,
+  "families": [
+    {
+      "family": "Exploits",
+      "seeds": 5,
+      "recall_mean": 1.0,
+      "recall_std": 0.0,
+      "distance_mean": 1.3894577503204346,
+      "rf_recall_mean": 1.0
+    },
+    {
+      "family": "Fuzzers",
+      "seeds": 5,
+      "recall_mean": 0.9469767441860466,
+      "recall_std": 0.015977268871923432,
+      "distance_mean": 0.7888169169425965,
+      "rf_recall_mean": 0.9888372093023257
+    },
+    {
+      "family": "Reconnaissance",
+      "seeds": 5,
+      "recall_mean": 0.47974683544303787,
+      "recall_std": 0.0935981585610094,
+      "distance_mean": 0.9999545812606812,
+      "rf_recall_mean": 0.4873417721518988
+    }
+  ],
+  "points": [
+    {
+      "family": "Exploits",
+      "seed": 11,
+      "model": "DQN frozen",
+      "heldout_records": 303,
+      "distance_mean": 1.3401826620101929,
+      "distance_median": 1.1165919303894043,
+      "heldout_recall": 1.0
+    },
+    {
+      "family": "Exploits",
+      "seed": 22,
+      "model": "DQN frozen",
+      "heldout_records": 303,
+      "distance_mean": 1.2500659227371216,
+      "distance_median": 1.0306727886199951,
+      "heldout_recall": 1.0
+    },
+    {
+      "family": "Exploits",
+      "seed": 33,
+      "model": "DQN frozen",
+      "heldout_records": 303,
+      "distance_mean": 1.4782603979110718,
+      "distance_median": 1.1795905828475952,
+      "heldout_recall": 1.0
+    },
+    {
+      "family": "Exploits",
+      "seed": 44,
+      "model": "DQN frozen",
+      "heldout_records": 303,
+      "distance_mean": 1.062137484550476,
+      "distance_median": 0.8448699116706848,
+      "heldout_recall": 1.0
+    },
+    {
+      "family": "Exploits",
+      "seed": 55,
+      "model": "DQN frozen",
+      "heldout_records": 303,
+      "distance_mean": 1.8166422843933103,
+      "distance_median": 1.4078017473220823,
+      "heldout_recall": 1.0
+    },
+    {
+      "family": "Fuzzers",
+      "seed": 11,
+      "model": "DQN frozen",
+      "heldout_records": 215,
+      "distance_mean": 0.7333872318267822,
+      "distance_median": 0.6037423014640808,
+      "heldout_recall": 0.958139534883721
+    },
+    {
+      "family": "Fuzzers",
+      "seed": 22,
+      "model": "DQN frozen",
+      "heldout_records": 215,
+      "distance_mean": 0.785774290561676,
+      "distance_median": 0.7017521858215332,
+      "heldout_recall": 0.9348837209302324
+    },
+    {
+      "family": "Fuzzers",
+      "seed": 33,
+      "model": "DQN frozen",
+      "heldout_records": 215,
+      "distance_mean": 0.8492826819419861,
+      "distance_median": 0.7484633326530457,
+      "heldout_recall": 0.9534883720930232
+    },
+    {
+      "family": "Fuzzers",
+      "seed": 44,
+      "model": "DQN frozen",
+      "heldout_records": 215,
+      "distance_mean": 0.7219423651695251,
+      "distance_median": 0.6017659902572632,
+      "heldout_recall": 0.9627906976744186
+    },
+    {
+      "family": "Fuzzers",
+      "seed": 55,
+      "model": "DQN frozen",
+      "heldout_records": 215,
+      "distance_mean": 0.8536980152130127,
+      "distance_median": 0.772296667098999,
+      "heldout_recall": 0.9255813953488372
+    },
+    {
+      "family": "Reconnaissance",
+      "seed": 11,
+      "model": "DQN frozen",
+      "heldout_records": 158,
+      "distance_mean": 1.039200782775879,
+      "distance_median": 0.83829665184021,
+      "heldout_recall": 0.5379746835443038
+    },
+    {
+      "family": "Reconnaissance",
+      "seed": 22,
+      "model": "DQN frozen",
+      "heldout_records": 158,
+      "distance_mean": 0.9508159160614014,
+      "distance_median": 0.827660322189331,
+      "heldout_recall": 0.5189873417721519
+    },
+    {
+      "family": "Reconnaissance",
+      "seed": 33,
+      "model": "DQN frozen",
+      "heldout_records": 158,
+      "distance_mean": 0.9654110074043274,
+      "distance_median": 0.836207389831543,
+      "heldout_recall": 0.4873417721518987
+    },
+    {
+      "family": "Reconnaissance",
+      "seed": 44,
+      "model": "DQN frozen",
+      "heldout_records": 158,
+      "distance_mean": 0.958658754825592,
+      "distance_median": 0.8522396683692932,
+      "heldout_recall": 0.5379746835443038
+    },
+    {
+      "family": "Reconnaissance",
+      "seed": 55,
+      "model": "DQN frozen",
+      "heldout_records": 158,
+      "distance_mean": 1.085686445236206,
+      "distance_median": 1.0317907333374023,
+      "heldout_recall": 0.3164556962025316
+    }
+  ],
+  "latency": {
+    "hardware": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "machine": "AMD64",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "onnxruntime": "1.24.4",
+    "provider": ["CPUExecutionProvider"],
+    "threads": 1,
+    "precision": "float32",
+    "parity_max_abs_error": 1.7881393432617188e-7,
+    "scope": "AE reconstruction only; excludes preprocessing, anomaly reduction, DQN, capture and API",
+    "results": [
+      {
+        "batch_size": 1,
+        "iterations": 200,
+        "median_batch_ms": 0.0937,
+        "p95_batch_ms": 0.13932999999999995,
+        "flows_per_second": 9925.361283150707
+      },
+      {
+        "batch_size": 32,
+        "iterations": 200,
+        "median_batch_ms": 0.2265,
+        "p95_batch_ms": 0.2729049999999999,
+        "flows_per_second": 135470.0918021544
+      },
+      {
+        "batch_size": 256,
+        "iterations": 200,
+        "median_batch_ms": 1.1846,
+        "p95_batch_ms": 1.419215,
+        "flows_per_second": 238187.50473932654
+      }
+    ]
+  }
+}

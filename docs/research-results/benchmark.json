@@ -1,0 +1,24 @@
+{
+  "dataset_mode": "synthetic",
+  "seeds": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ],
+  "families": [
+    "Exploits",
+    "Fuzzers",
+    "Reconnaissance"
+  ],
+  "epochs": 20,
+  "episodes": 100,
+  "sources": [
+    {
+      "file": "runs\\loao-five-seed\\synthetic.csv",
+      "sha256": "f1b8a3ca87f5fc1a093e11a4a50229479133d1afb21b3df817b5e243ccc2cfc3"
+    }
+  ],
+  "protocol": "LOAO, category-stratified deduplicated splits; not chronological; heldout adaptation rows excluded from frozen analysis"
+}

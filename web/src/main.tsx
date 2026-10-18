@@ -13,6 +13,8 @@ import {
   CircleDot,
 } from "lucide-react";
 import "./style.css";
+import { TechniqueReference } from "./TechniqueReference";
+import { ResearchEvidence } from "./ResearchEvidence";
 
 type Flow = {
   id: string;
@@ -579,6 +581,8 @@ function App() {
                   )}
                 </section>
               )}
+              {tab === "Benchmarks" && <TechniqueReference />}
+              {tab === "Benchmarks" && <ResearchEvidence />}
               {tab === "Benchmarks" && (
                 <section className="panel">
                   <div className="panel-title">

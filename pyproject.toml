@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adaptive-defense"
-version = "0.2.0"
+version = "0.4.0"
 description = "Offline network intrusion detection research with autoencoders and adaptive threshold control"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,10 +12,12 @@ dependencies = ["numpy>=2,<3", "pandas>=2.2,<4", "torch>=2.5,<3", "scikit-learn>
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
+edge = ["onnx>=1.17,<2", "onnxruntime>=1.20,<2"]
 
 [project.scripts]
 adaptive-train = "adaptive_defense.experiment:main"
 adaptive-predict = "adaptive_defense.predict:main"
+adaptive-benchmark = "adaptive_defense.benchmark:main"
 
 [tool.setuptools.packages.find]
 include = ["adaptive_defense*"]

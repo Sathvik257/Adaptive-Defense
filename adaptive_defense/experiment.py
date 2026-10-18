@@ -108,14 +108,14 @@ def run(args):
     manifest=pd.concat([v[["_fingerprint","attack_cat","label"]].assign(split=k) for k,v in splits.items()])
     manifest.to_csv(out/"split_manifest.csv",index=False)
     bundle={"preprocessor":prep,"columns":columns,"dimension":x["train"].shape[1],
-            "threshold":threshold,"grid":grid,"baselines":baseline_models,"demo":args.demo}
+            "threshold":threshold,"grid":grid,"baselines":baseline_models,"demo":args.demo or getattr(args,'synthetic_source',False)}
     with open(out/"pipeline.pkl","wb") as f:
         pickle.dump(bundle,f)
     torch.save(model.state_dict(),out/"autoencoder.pt")
     torch.save(agent.online.state_dict(),out/"dqn.pt")
     torch.save(adapted.online.state_dict(),out/"dqn_adapted.pt")
     import sklearn
-    summary={"dataset":"SYNTHETIC DEMONSTRATION" if args.demo else "USER-SUPPLIED NETWORK FLOW CSV",
+    summary={"dataset":"SYNTHETIC DEMONSTRATION" if args.demo or getattr(args,'synthetic_source',False) else "USER-SUPPLIED NETWORK FLOW CSV",
         "seed":args.seed,"configuration":vars(args),"audit":audit,"feature_columns":columns,
         "input_files":[str(p) for p in sources],"elapsed_seconds":time.perf_counter()-started,
         "versions":{"python":platform.python_version(),"torch":torch.__version__,"sklearn":sklearn.__version__,"pandas":pd.__version__},

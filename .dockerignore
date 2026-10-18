@@ -19,3 +19,14 @@
 web/node_modules
 web/dist
 runtime
+!serve_api.py
+!adaptive_defense/api/
+!adaptive_defense/api/*.py
+!web/
+!web/package.json
+!web/package-lock.json
+!web/index.html
+!web/tsconfig.json
+!web/vite.config.ts
+!web/src/
+!web/src/**

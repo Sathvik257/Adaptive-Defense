@@ -58,6 +58,8 @@ def split_data(df, holdout, seed):
     conflicts = df.groupby("_fingerprint").label.nunique()
     if (conflicts > 1).any():
         raise ValueError("Identical feature records have conflicting labels; resolve them first.")
+    if (df.groupby('_fingerprint').attack_cat.nunique() > 1).any():
+        raise ValueError('Identical feature records have conflicting attack families; resolve them first.')
     original = len(df)
     df = df.drop_duplicates("_fingerprint").copy()
     holdout = {x.strip().lower() for x in holdout}
