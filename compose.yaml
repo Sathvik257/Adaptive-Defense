@@ -1,0 +1,12 @@
+services:
+  dashboard:
+    build: .
+    ports:
+      - "127.0.0.1:8501:8501"
+    environment:
+      PORT: "8501"
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 2
+    security_opt:
+      - no-new-privileges:true

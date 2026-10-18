@@ -1,0 +1,59 @@
+{
+  "dataset": "SYNTHETIC DEMONSTRATION",
+  "seed": 42,
+  "configuration": {
+    "demo": true,
+    "csv": null,
+    "output": "runs/demo",
+    "holdout": [
+      "Fuzzers"
+    ],
+    "seed": 42,
+    "epochs": 20,
+    "episodes": 100,
+    "window": 64,
+    "adapt_passes": 3
+  },
+  "audit": {
+    "input_records": 2400,
+    "unique_records": 2400,
+    "duplicates_removed": 0,
+    "held_out_categories": [
+      "fuzzers"
+    ],
+    "split_counts": {
+      "train": 1215,
+      "validation": 304,
+      "adaptation": 351,
+      "test": 530
+    },
+    "protocol": "custom category-stratified partitions; synthetic replay, not chronological"
+  },
+  "feature_columns": [
+    "dur",
+    "spkts",
+    "dpkts",
+    "sbytes",
+    "dbytes",
+    "rate",
+    "proto",
+    "service",
+    "state"
+  ],
+  "input_files": [
+    "runs\\demo\\synthetic_input.csv"
+  ],
+  "elapsed_seconds": 19.752568600000814,
+  "versions": {
+    "python": "3.14.3",
+    "torch": "2.13.0+cpu",
+    "sklearn": "1.9.1",
+    "pandas": "3.0.3"
+  },
+  "limitations": [
+    "Synthetic replay is not chronological traffic.",
+    "Withheld categories are a proxy, not verified real zero-day exploits.",
+    "Adapted-category recall is post-feedback performance, not unseen-category generalization.",
+    "DQN superiority is not assumed; compare the saved measurements."
+  ]
+}

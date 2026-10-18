@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adaptive-defense"
+version = "0.2.0"
+description = "Offline network intrusion detection research with autoencoders and adaptive threshold control"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2,<3", "pandas>=2.2,<4", "torch>=2.5,<3", "scikit-learn>=1.6,<2", "streamlit>=1.59,<2", "matplotlib>=3.9,<4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+
+[project.scripts]
+adaptive-train = "adaptive_defense.experiment:main"
+adaptive-predict = "adaptive_defense.predict:main"
+
+[tool.setuptools.packages.find]
+include = ["adaptive_defense*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
