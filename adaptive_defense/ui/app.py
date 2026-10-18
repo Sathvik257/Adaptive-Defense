@@ -3,6 +3,7 @@ from pathlib import Path
 import streamlit as st
 from adaptive_defense.run_store import discover_runs, load_experiment
 from adaptive_defense.ui import analysis, method, overview, replay, upload
+from adaptive_defense.ui.components import hero
 
 ROOT = Path(__file__).resolve().parents[2]
 VIEWS = {"Overview": overview, "Compare": analysis, "Replay": replay,
@@ -31,9 +32,8 @@ def main():
         st.stop()
     if view != "Replay":
         st.session_state["replay_play"] = False
-    st.markdown('<div class="eyebrow">NETWORK DETECTION / RESEARCH WORKSPACE</div>', unsafe_allow_html=True)
-    st.title("Adaptive Defense")
-    st.write("A closer look at what your detector sees.")
+    st.markdown('<div class="app-bar"><span>ADAPTIVE DEFENSE</span><span class="app-badge">RESEARCH EDITION</span></div>', unsafe_allow_html=True)
+    hero(view, len(experiment.predictions), len(experiment.metrics))
     if experiment.is_demo:
         st.markdown('<div class="demo-note"><strong>Synthetic demo</strong> · Explore the workflow with sample traffic. Real-world detection performance has not been established.</div>', unsafe_allow_html=True)
     else:

@@ -23,3 +23,7 @@ Synthetic demo configuration and software versions are recorded in `runs/demo/su
 ## Repository structure update — October 18, 2026
 
 The entry point now delegates to a UI package with separate overview, comparison, replay, upload and methodology views. Run artifacts are validated through a framework-independent reader. UI coverage exercises navigation, replay/reset and each view. Added an editable Python package configuration, a GitHub Actions test workflow, baseline deltas and filtered decision inspection. The daily local sync skips unchanged days and pushes only completed changes after checks.
+
+## Web app interaction polish
+
+Added page-specific hero sections, a finite animated signal diagram, workspace shortcut cards, responsive layout rules and reduced-motion behavior. Decorative animation stops after two cycles. Metric cards no longer replay entrance animations on every update, and buttons do not shift on hover. Replay uses an independently tested monotonic clock with play/pause/reset, speed selection, manual seek and stable chart domains. A paused frame stays unchanged and slow rendering cannot skip several windows. Automated checks establish behavior, not a guarantee of flawlessness on every device or browser.

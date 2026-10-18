@@ -1,20 +1,22 @@
-from pathlib import Path
-import hashlib
 import pandas as pd
 import streamlit as st
-from adaptive_defense.predict import predict
-from adaptive_defense.uploads import read_upload
+from adaptive_defense.ui.components import quick_actions
 
 
 def render(run, summary, metrics, pred):
+    st.subheader("Detection overview")
     selected=st.selectbox("Model",metrics.model)
     row=metrics.set_index("model").loc[selected]
     reference=metrics.set_index("model").loc["Fixed autoencoder"]
     a,b,c,d=st.columns(4)
-    a.metric("Attack recall",f"{row.recall:.1%}",f"{(row.recall-reference.recall)*100:+.1f} pp")
-    b.metric("Precision",f"{row.precision:.1%}",f"{(row.precision-reference.precision)*100:+.1f} pp")
-    c.metric("False alarm rate",f"{row.false_positive_rate:.1%}",f"{(row.false_positive_rate-reference.false_positive_rate)*100:+.1f} pp",delta_color="inverse")
-    d.metric("F1 score",f"{row.f1:.3f}",f"{row.f1-reference.f1:+.3f}")
+    def delta(value, baseline, percent=True):
+        if abs(value-baseline)<1e-8:
+            return None
+        return f"{(value-baseline)*100:+.1f} pp" if percent else f"{value-baseline:+.3f}"
+    a.metric("Attack recall",f"{row.recall:.1%}",delta(row.recall,reference.recall))
+    b.metric("Precision",f"{row.precision:.1%}",delta(row.precision,reference.precision))
+    c.metric("False alarm rate",f"{row.false_positive_rate:.1%}",delta(row.false_positive_rate,reference.false_positive_rate),delta_color="inverse")
+    d.metric("F1 score",f"{row.f1:.3f}",delta(row.f1,reference.f1,False))
     st.caption("Changes are relative to the fixed-threshold autoencoder. pp = percentage points.")
     st.markdown(f'<div class="insight">Of <strong>{int(row.tp+row.fn):,} attacks</strong>, this detector caught <strong>{int(row.tp):,}</strong> and missed <strong>{int(row.fn):,}</strong>. It also flagged <strong>{int(row.fp):,}</strong> normal flows.</div>',unsafe_allow_html=True)
     st.subheader("Detection at a glance")
@@ -32,3 +34,5 @@ def render(run, summary, metrics, pred):
         st.write("Held-out categories:",", ".join(summary["audit"]["held_out_categories"]))
         st.write("Random seed:",summary["seed"])
         st.write("Execution time:",f"{summary['elapsed_seconds']:.1f} seconds")
+    st.subheader("Explore the workspace")
+    quick_actions()

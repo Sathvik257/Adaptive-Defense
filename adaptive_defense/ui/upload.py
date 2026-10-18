@@ -2,7 +2,6 @@ from pathlib import Path
 import hashlib
 import pandas as pd
 import streamlit as st
-from adaptive_defense.predict import predict
 from adaptive_defense.uploads import read_upload
 
 
@@ -22,6 +21,7 @@ def render(run, summary, metrics, pred):
         try:
             frame=read_upload(file)
             modes={"Fixed autoencoder":"fixed","DQN frozen":"frozen","DQN adapted":"adapted"}
+            from adaptive_defense.predict import predict
             with st.spinner("Analyzing traffic…"):
                 output=predict(run,frame,modes[mode])
             st.session_state["analysis_result"]=(str(run),file_key,mode,output)

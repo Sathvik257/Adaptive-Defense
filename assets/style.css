@@ -34,3 +34,44 @@ button:focus-visible, a:focus-visible { outline: 3px solid #347459 !important; o
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; transform: none !important; } }
 @media (max-width: 640px) { .block-container { padding: 1.4rem 1rem; } [role="tablist"] { gap: .6rem; } [data-testid="stMetric"] { padding: 14px; } }
+
+/* Application shell: finite motion, stable controls, responsive composition. */
+.block-container { max-width: 1280px; padding-top: 4.5rem; }
+.app-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:22px; font-size:12px; letter-spacing:.12em; font-weight:650; }
+.app-badge { font-size:10px; letter-spacing:.09em; color:#617266; padding:5px 9px; border:1px solid #dbe3d9; border-radius:5px; }
+.workspace-hero { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:30px 34px; background:#e6eee3; border:1px solid #d4e0d0; border-radius:16px; margin-bottom:12px; overflow:hidden; }
+.hero-copy { max-width:630px; }
+.hero-copy h1 { font-size:clamp(26px,3vw,40px); line-height:1.15; letter-spacing:-.045em; padding:0 0 12px; margin:0; color:#233b2d; }
+.hero-copy p { font-size:15px; line-height:1.65; color:#526456; max-width:510px; margin:0; }
+.hero-facts { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:22px; font-size:11px; font-weight:600; color:#4d6552; }
+.hero-facts span + span { border-left:1px solid #b9ccba; padding-left:18px; }
+.signal-art { width:230px; flex-shrink:0; text-align:center; }
+.signal-art svg { width:100%; height:auto; fill:#5b8365; }
+.signal-line { stroke:#aec5af; stroke-width:1.5; fill:none; }
+.signal-travel { stroke:#347459; stroke-width:2.5; fill:none; stroke-dasharray:14 300; animation:signal-flow 2.8s ease-in-out 2; }
+.signal-hub { fill:#e6eee3; stroke:#678e71; stroke-width:1.5; }
+.signal-art span { font-size:9px; letter-spacing:.16em; color:#607d66; }
+.demo-note { background:transparent; border-left:0; padding:6px 2px; font-size:12px; color:#667467; margin:6px 0 22px; }
+[data-testid="stMetric"] { animation:none; box-shadow:0 2px 4px #24342d03; }
+button:hover { transform:none; }
+[data-testid="stButton"] button, [data-testid="stDownloadButton"] button { min-height:42px; border-radius:8px; }
+[data-testid="stButton"] button:active { transform:translateY(1px); }
+[data-testid="stVerticalBlockBorderWrapper"] { border-radius:12px; }
+[data-testid="stSidebar"] { min-width:250px; }
+[data-testid="stProgress"] [role="progressbar"] { transition:width .18s linear; }
+@keyframes signal-flow { from { stroke-dashoffset:314; } to { stroke-dashoffset:0; } }
+@media (hover:none) { [data-testid="stMetric"]:hover { transform:none; box-shadow:none; } }
+@media (max-width:900px) { .signal-art { width:160px; } .workspace-hero { padding:24px; gap:12px; } }
+@media (max-width:640px) {
+  .block-container { padding-top:4.2rem; }
+  .signal-art { display:none; } .workspace-hero { padding:22px 18px; border-radius:12px; }
+  .hero-facts { gap:8px; } .hero-facts span + span { padding-left:8px; }
+  .app-bar { font-size:10px; padding-bottom:16px; } .app-badge { font-size:9px; }
+  [data-testid="stHorizontalBlock"] { flex-wrap:wrap; }
+  [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] { min-width:0; flex:1 1 100% !important; }
+  [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) > [data-testid="stColumn"] { flex-basis:calc(50% - .5rem) !important; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .signal-travel { animation:none; stroke-dasharray:none; opacity:.6; }
+  [data-testid="stMetric"], button, [role="progressbar"] { transition:none !important; transform:none !important; }
+}
