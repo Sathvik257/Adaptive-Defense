@@ -1,5 +1,7 @@
 # Deploy the original console on Vercel
 
+**Live demo:** [web-flame-eight-75.vercel.app](https://web-flame-eight-75.vercel.app/)
+
 This is a static recorded-synthetic demo. It runs replay, inspection, benchmarks, cost comparisons and a 20-item analyst queue entirely in the browser. No Python runtime, external database, credentials or model weights are needed. It does not train models, capture traffic or perform live inference. Reviews use sessionStorage: they survive reloads in the same tab but are not server-backed, shared across devices, or a tamper-proof budget. Closing the tab clears its session. Browser storage must be enabled.
 
 ## GitHub import
@@ -26,6 +28,6 @@ Open http://127.0.0.1:4173 with the API server stopped: no /api or WebSocket req
 
 `npm run build --prefix web` still builds the original FastAPI/WebSocket/SQLite client. Run `python serve_api.py` as before. The hosted adapter is selected at build time only; no credentials go in VITE variables. The alternate light-theme review branch is not merged.
 
-Hosting configuration and local browser checks do not prove a successful public Vercel deployment. No site was published as part of preparing this configuration.
+The user deployed the live demo linked above. Its homepage returned HTTP 200 when checked on 2 November 2026. Local build checks remain distinct from Vercel deployment logs; consult the Vercel dashboard for build status and configuration.
 
 Reference: https://vercel.com/docs/frameworks/frontend/vite

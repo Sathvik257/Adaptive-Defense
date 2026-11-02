@@ -1,149 +1,158 @@
 # Adaptive Defense
 
-## Reusable research benchmark
+### Zero-Day Attack Detection in NIDS With Deep Reinforcement Learning
 
-Install with `python -m pip install .`, then run `adaptive-benchmark --demo --output
-runs/loao`. The default uses five seeds and leaves each attack family out in turn.
-See [benchmark guide](docs/BENCHMARK.md), [dataset card](docs/DATASET_CARD.md),
-[model card](docs/MODEL_CARD.md), and [isolated lab](lab/README.md).
+An offline network intrusion detection research project that combines a benign-trained autoencoder with a Deep Q-Network (DQN) threshold controller. Explore recorded model decisions, compare baselines, and evaluate detection of attack families withheld from initial training.
 
-## React web console
+**[Open the live demo](https://web-flame-eight-75.vercel.app/)** · [Research results](docs/RESEARCH_RESULTS.md) · [Benchmark guide](docs/BENCHMARK.md) · [Deployment guide](docs/VERCEL.md)
 
-The new React + FastAPI console provides a recorded WebSocket replay, traffic
-projection, decision inspector, SQLite analyst queue and benchmark cost controls.
+> **Research status:** the published demo and reported experiments use synthetic traffic. Held-out attack families simulate unfamiliar attacks; they do not prove real-world zero-day detection. The project does not capture or block live traffic.
 
-```powershell
+## Explore the demo
+
+The [hosted console](https://web-flame-eight-75.vercel.app/) uses the original dark interface and requires no installation.
+
+1. Start the recorded replay and adjust its speed.
+2. Select a flow to inspect its anomaly score, threshold action and reconstruction errors.
+3. Request analyst review and assign a label within the 20-query demonstration budget.
+4. Open **Benchmarks** to compare saved results, detection trade-offs and measured research evidence.
+
+The Vercel version runs entirely in the browser. Review labels stay in that tab's session storage; they are not sent to a server or used to retrain a model. The hosted site performs no live model inference or training.
+
+## How it works
+
+```text
+Traffic records → Train-fitted preprocessing → Autoencoder reconstruction score
+                                                    ↓
+                                          DQN threshold controller
+                                                    ↓
+                                         Allow / alert decision
+                                                    ↓
+                                      Evaluation and analyst review
+```
+
+The autoencoder learns benign patterns. Reconstruction error provides an anomaly score. The DQN chooses whether to lower, hold or raise the decision threshold, balancing missed attacks and false alarms in a simulated environment. Supervised and non-RL baselines test whether the controller actually helps.
+
+| Component | Implementation |
+| --- | --- |
+| Representation | Dense autoencoder with a 16-dimensional latent space; benign-only training |
+| Controller | DQN with an eight-value state, three actions, replay buffer and target network |
+| Baselines | Random Forest, supervised MLP, fixed-threshold autoencoder and alert-rate rule |
+| Evaluation | Leave-one-attack-out (LOAO), multiple seeds, recall, precision, F1, false-positive rate and cost |
+| Analysis | Held-out attack detectability in embedding space; descriptive score-distribution monitoring in the local API |
+| Console | Recorded replay, decision inspection, review queue, cost comparison and contextual MITRE ATT&CK references |
+
+**Stack:** React · TypeScript · Vite · FastAPI · SQLite · PyTorch · scikit-learn. Streamlit remains available as a separate legacy dashboard. ONNX Runtime supports optional CPU inference measurements.
+
+## Results and limitations
+
+The completed synthetic benchmark includes **15 runs: three held-out families × five seeds**.
+
+| Held-out family | Frozen DQN recall, mean ± sample SD | Random Forest recall, mean |
+| --- | ---: | ---: |
+| Exploits | 100.0% ± 0.0% | 100.0% |
+| Fuzzers | 94.7% ± 1.6% | 98.9% |
+| Reconnaissance | 48.0% ± 9.4% | 48.7% |
+
+These results do **not** establish DQN superiority. Recall must be considered alongside false alarms and cost. See the [results report](docs/RESEARCH_RESULTS.md) and [raw metric tables](docs/research-results/) for provenance, limitations and model-only CPU timings.
+
+- Preprocessing fits training records only; duplicate feature records cannot cross partitions.
+- Held-out families are excluded from initial training and validation. Adaptation uses separate labeled records; adapted results are distinct from frozen results.
+- Partitions are custom and replay order is synthetic, not a chronological production stream.
+- Real UNSW-NB15 evaluation and independent lab-traffic validation remain outstanding.
+- Analyst labels do not update the running detector. MITRE mappings are contextual references, not model predictions.
+
+## Run locally
+
+### Browser-only demonstration
+
+Requires Node.js 22 or 24. No Python server or credentials are needed.
+
+```sh
+git clone https://github.com/Sathvik257/Adaptive-Defense.git
+cd Adaptive-Defense
+npm ci --prefix web
+npm run build:vercel --prefix web
+npm run preview --prefix web -- --port 4173
+```
+
+Open [localhost:4173](http://127.0.0.1:4173/).
+
+### Full local research console
+
+Requires Python 3.11+ with a compatible PyTorch build, plus Node.js. Create and activate a virtual environment before installing dependencies.
+
+```sh
+python -m venv .venv
+```
+
+Activate with `.venv\Scripts\Activate.ps1` in PowerShell or `source .venv/bin/activate` on macOS/Linux, then:
+
+```sh
 python -m pip install -r requirements-api.txt
-npm.cmd ci --prefix web
-npm.cmd run build --prefix web
+npm ci --prefix web
+npm run build --prefix web
 python serve_api.py
 ```
 
-Open http://127.0.0.1:8000. See [console architecture and research boundaries](docs/WEB_CONSOLE.md).
-The Streamlit interface described below remains available as a legacy dashboard.
+Open [localhost:8000](http://127.0.0.1:8000/). This mode uses FastAPI WebSocket replay and a local SQLite review queue. The bundled recorded artifact is ready to explore without retraining.
 
-**Zero-Day Attack Detection in NIDS With Deep Reinforcement Learning**
+For the legacy dashboard, run `python -m streamlit run dashboard.py` and open port 8501.
 
-A runnable research project combining a benign-trained deep autoencoder with a DQN threshold controller, supervised baselines, a rule controller, disjoint adaptation experiments, and a Streamlit dashboard.
+## Reproduce experiments
 
-The workspace has five focused views: **Overview**, **Compare**, **Replay**, **Analyze CSV**, and **About**. Compare models against the fixed-threshold baseline, explore missed attacks and false alarms, and replay saved decisions. The UI and model code are separated into modules; see [the architecture guide](docs/ARCHITECTURE.md).
-
-**Stack:** Python · PyTorch · scikit-learn · pandas · Streamlit · Docker · GitHub Actions.
-
-> The bundled demonstration is synthetic. It verifies implementation, not cybersecurity effectiveness. Real UNSW-NB15 experiments require the dataset CSV files. Withheld categories simulate unfamiliar attacks; they do not establish real-world zero-day detection.
-
-## Quick start on this computer
-
-The local `.venv` has the additional dependencies and uses preinstalled PyTorch, pandas, and Streamlit.
-
-```powershell
-.\.venv\Scripts\python -m streamlit run dashboard.py --server.address 127.0.0.1
-```
-
-Or run `start-dashboard.ps1`. The dashboard reads completed folders under `runs/`.
-
-To create another demonstration:
-
-```powershell
-.\.venv\Scripts\python -m adaptive_defense.experiment --demo --output runs/demo-new --epochs 20 --episodes 100 --window 64
-```
-
-## Fresh installation
-
-Use Python 3.11 or newer with a supported PyTorch build. A CPU is sufficient for the small demo.
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
-.\.venv\Scripts\python -m adaptive_defense.experiment --demo --epochs 20 --episodes 100 --window 64
-.\.venv\Scripts\python -m streamlit run dashboard.py --server.address 127.0.0.1
-```
-
-If Windows `ensurepip` fails, install into the created environment with `python -m pip --python .venv\Scripts\python.exe install -r requirements.txt`. Do not copy another machine's `.venv`.
-
-## Real UNSW-NB15 experiment
-
-Get the two prepared CSVs using [the official dataset page](https://research.unsw.edu.au/projects/unsw-nb15-dataset). See `data/raw/README.md`.
-
-```powershell
-.\.venv\Scripts\python -m adaptive_defense.experiment --csv data/raw/UNSW_NB15_training-set.csv data/raw/UNSW_NB15_testing-set.csv --holdout Fuzzers --output runs/unsw-fuzzers-42 --seed 42 --epochs 40 --episodes 100 --window 256
-```
-
-Repeat with seeds 7 and 123 and separate output folders. Repeat with another held-out category in a separate experiment. Do not select hyperparameters using those final results. The program refuses to overwrite a completed run.
-
-## What is implemented
-
-| Component | Implementation |
-|---|---|
-| Data integrity | Binary-label validation, feature deduplication, conflicting-label rejection, saved split manifest |
-| Preprocessing | Training-only imputation, scaling, categorical encoding with unknown-category support |
-| Autoencoder | Dense 128–64–16–64–128 network, benign-only optimization, early stopping |
-| DQN | 8-input state, three actions, replay buffer, target network, Huber loss, gradient clipping |
-| Baselines | Random Forest, supervised MLP, fixed autoencoder, simple alert-rate controller |
-| Evaluation | Frozen known/unseen recall, F1, precision, false positives, confusion counts |
-| Adaptation | Separate feedback partition; adapted policy evaluated without test-label feedback |
-| Dashboard | Metrics, category comparisons, learning curves, threshold replay, CSV inference/download |
-
-## Data boundaries
-
-Known categories and normal traffic: 60% training, 15% validation, 10% adaptation, 15% final evaluation (rounding applies). Held-out categories: 40% adaptation and 60% evaluation, zero training/validation. Identical feature vectors are deduplicated before partitioning. These are custom partitions, not the official benchmark split. Session-level isolation cannot be established from these simplified CSV records alone. Replay ordering is synthetic, not chronological.
-
-The autoencoder is trained only on benign training rows. The preprocessor is fitted on training features. The controller learns rewards on development rows. Validation chooses its checkpoint. Final labels are used only by the evaluator. Adaptation uses a cloned policy and separate records; the autoencoder remains frozen.
-
-## Outputs
-
-Each completed run includes:
-
-- `summary.json`: configuration, versions, provenance, audit and limitations.
-- `metrics.csv`: comparison metrics for six model variants.
-- `predictions.csv`: test labels, categories, scores and predictions.
-- `split_manifest.csv`: reproducible record fingerprints and assigned partitions.
-- `autoencoder_history.csv`, `controller_history.csv`: training histories.
-- `threshold_trace.csv`, `adapted_threshold_trace.csv`: window decisions.
-- `pipeline.pkl`, `autoencoder.pt`, `dqn.pt`, `dqn_adapted.pt`: inference artifacts.
-
-Only load local artifacts you trust: Python pickle is not safe for untrusted files. Uploaded CSV data is processed locally and is not sent to a service.
-
-## Verification
-
-```powershell
-.\.venv\Scripts\python -m pytest -q
-```
-
-Tests check target exclusion, split isolation, duplicate handling, unknown categorical features, hidden evaluation labels, delayed feedback, reward calculations, terminal boundaries, and dashboard rendering. A full demonstration run exercises training and artifact generation.
-
-In a restricted Windows environment, set `TMP` and `TEMP` to a writable workspace directory and pass a fresh `--basetemp` under that directory if the system temporary directory is blocked.
-
-## Command-line inference and exportable figures
-
-```powershell
-.\.venv\Scripts\python -m adaptive_defense.predict --run runs/demo --csv runs/demo/synthetic_input.csv --mode frozen --output runs/demo/new_predictions.csv
-.\.venv\Scripts\python -m adaptive_defense.figures runs/demo
-```
-
-Inference accepts feature-only CSVs. Available modes are `fixed`, `frozen`, and `adapted`. Figure export produces PNG model-comparison, threshold-replay, and learning-curve images with an explicit synthetic-data label when applicable.
-
-## Read next
-
-- `docs/PROJECT_REPORT.md`: detailed academic report and methodology.
-- `docs/DEMO_GUIDE.md`: demonstration script and viva questions.
-- `docs/HOSTING.md`: Docker and Python hosting, resource limits and deployment instructions.
-- `docs/resource-check.json`: measured local resource and inference checks.
-- `docs/ARCHITECTURE.md`: module map, stack choices and development workflow.
-- `docs/DAILY_SYNC.md`: daily synchronization behavior and availability requirements.
-
-## Host the dashboard
+With the Python environment active:
 
 ```sh
-docker compose up --build -d
+python -m pip install .
+adaptive-benchmark --demo --output runs/loao-new --seeds 11 22 33 44 55 --epochs 20 --episodes 100
 ```
 
-Open `http://localhost:8501`. For a Python hosting provider, install `requirements-host.txt` and use `python serve.py` as the start command. See the hosting guide before exposing the service publicly. No public deployment is included.
+Choose a new output directory; completed runs are not overwritten. Outputs include configuration and provenance, split manifests, per-model metrics, predictions, training histories and model artifacts. Only load trusted pickle/model files.
 
-## Scope
+For real data, obtain the prepared CSV files from the [official UNSW-NB15 dataset page](https://research.unsw.edu.au/projects/unsw-nb15-dataset), then follow the [benchmark guide](docs/BENCHMARK.md) and [dataset card](docs/DATASET_CARD.md). Custom LOAO partitions must not be reported as the official train/test benchmark split.
 
-This is an offline NIDS research prototype. It does not capture live traffic, block traffic, identify a vulnerability/CVE, or guarantee discovery of zero-day exploits. A stationary synthetic replay may favor a fixed threshold; DQN superiority must be measured rather than assumed. No automatic alert budget or live analyst interface is claimed.
+## Repository structure
 
-## Vercel demo hosting
+```text
+adaptive_defense/   Training, evaluation, inference and local API
+web/               Original React console and hosted-demo adapter
+tests/             Data integrity, models, API and workflow checks
+tools/             Artifact export, CPU benchmarking and study utilities
+docs/              Methodology, results, cards and deployment guides
+lab/               Isolated traffic-generation and capture recipe
+paper/             IEEE-style manuscript source
+runs/demo/         Bundled synthetic demonstration artifacts
+vercel.json        Public web-service routing and hosted build configuration
+```
 
-The original React console can be deployed as a self-contained recorded demo using the root `vercel.json`. See [Vercel deployment instructions](docs/VERCEL.md) for setup, browser-only review storage and local/API mode differences.
+## Validation
+
+```sh
+python -m pip install pytest
+python -m pytest -q
+npm run build --prefix web
+npm run build:vercel --prefix web
+```
+
+The latest Python check passed 46 tests. Both frontend build modes and browser checks for replay, review persistence, benchmarks, reset and mobile overflow have passed. If Windows denies access to its temporary directory, pass a fresh project-local `--basetemp` to pytest.
+
+## Documentation
+
+| Guide | Contents |
+| --- | --- |
+| [Project report](docs/PROJECT_REPORT.md) | Academic background and methodology |
+| [Benchmark](docs/BENCHMARK.md) | Reproducible LOAO experiments |
+| [Dataset card](docs/DATASET_CARD.md) / [Model card](docs/MODEL_CARD.md) | Intended use, splits and limitations |
+| [Research results](docs/RESEARCH_RESULTS.md) | Measured synthetic results and remaining work |
+| [Related work](docs/RELATED_WORK.md) | Comparison with Kitsune and streaming monitoring |
+| [Web console](docs/WEB_CONSOLE.md) | Console architecture and research boundaries |
+| [Vercel deployment](docs/VERCEL.md) | Hosted-demo setup and browser storage behavior |
+| [Architecture](docs/ARCHITECTURE.md) | Research modules and development workflow |
+| [Isolated lab](lab/README.md) | Local traffic-generation protocol |
+
+## Deployment
+
+**Live demo:** [web-flame-eight-75.vercel.app](https://web-flame-eight-75.vercel.app/)
+
+Vercel builds one public `web` service and routes `/` to it. The hosted build publishes static assets and an allowlisted synthetic console artifact; it does not deploy the Python research stack. See [deployment instructions](docs/VERCEL.md) to reproduce the setup.
