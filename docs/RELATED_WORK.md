@@ -20,6 +20,6 @@ This is a diagnostic, not a calibrated drift detector. The initial window is not
 3. Evaluate a genuine streaming detector with controlled shifts, detection delay and false-alarm rates before automatic adaptation.
 4. Add KitNET only with matched data and fair preprocessing; importing another architecture alone is not a research result.
 
-## Frontend review boundary
+## Frontend decision (2 November 2026)
 
-The proposed interface is maintained in a separate local codex/frontend-review worktree. It must not be pushed or merged without explicit user approval. The daily synchronization of the main checkout must not include that worktree. Existing production frontend files remain unchanged.
+The user chose to retain the original frontend. The alternative design remains only in the local codex/frontend-review worktree for reference; do not push or merge it. Daily synchronization applies to the main checkout only. The backend monitoring endpoint and research improvements are retained independently of the rejected design. Existing production frontend files remain unchanged.
