@@ -6,9 +6,9 @@ This is a static recorded-synthetic demo. It runs replay, inspection, benchmarks
 
 1. Import `Sathvik257/Adaptive-Defense` into Vercel.
 2. Keep Root Directory at the repository root (not `web`).
-3. Select Framework Preset **Other**. The committed vercel.json sets install to `npm ci --prefix web`, build to `npm run build:vercel --prefix web`, and output to `web/dist`.
+3. Use the **Services** preset. The committed vercel.json explicitly declares one Vite service named `web`, rooted at `.` so it can read the recorded artifact. Its install command is `npm ci --prefix web`, build is `npm run build:vercel --prefix web`, and output is `web/dist`. The catch-all public rewrite targets `web`. There is no Python service and no internal binding: hosted mode makes no backend calls.
 4. Use Node.js 22 or 24. No environment variables are required.
-5. Deploy and verify Start/Pause/Reset, review labels and Benchmarks.
+5. Refresh or restart the GitHub import after the configuration commit reaches main. If the import still lists a Python service named `app`, it is showing the old auto-detected setup; re-import the latest main revision before deploying. Deploy and verify Start/Pause/Reset, review labels and Benchmarks.
 
 Only web/dist is published. The hosted build emits a whitelist of console artifact fields, excluding the top-level ground-truth records. Do not add private data to this synthetic artifact. No model weights or Python packages enter the static output.
 

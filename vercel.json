@@ -1,9 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "installCommand": "npm ci --prefix web",
-  "buildCommand": "npm run build:vercel --prefix web",
-  "outputDirectory": "web/dist",
+  "services": {
+    "web": {
+      "root": ".",
+      "framework": "vite",
+      "installCommand": "npm ci --prefix web",
+      "buildCommand": "npm run build:vercel --prefix web",
+      "outputDirectory": "web/dist"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
