@@ -143,3 +143,7 @@ Open `http://localhost:8501`. For a Python hosting provider, install `requiremen
 ## Scope
 
 This is an offline NIDS research prototype. It does not capture live traffic, block traffic, identify a vulnerability/CVE, or guarantee discovery of zero-day exploits. A stationary synthetic replay may favor a fixed threshold; DQN superiority must be measured rather than assumed. No automatic alert budget or live analyst interface is claimed.
+
+## Vercel demo hosting
+
+The original React console can be deployed as a self-contained recorded demo using the root `vercel.json`. See [Vercel deployment instructions](docs/VERCEL.md) for setup, browser-only review storage and local/API mode differences.

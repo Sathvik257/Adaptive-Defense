@@ -13,6 +13,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import "./style.css";
+import { hosted, demoApi } from "./hosted";
 import { TechniqueReference } from "./TechniqueReference";
 import { ResearchEvidence } from "./ResearchEvidence";
 
@@ -54,6 +55,7 @@ async function api<T>(
   method = "GET",
   body?: unknown,
 ): Promise<T> {
+  if (hosted) return (await demoApi(path, method, body)) as T;
   const res = await fetch("/api/" + path, {
     method,
     headers: { "Content-Type": "application/json" },
@@ -92,6 +94,26 @@ function App() {
     if (!playing || !data) return;
     let timer: number | undefined;
     let closed = false;
+    if (hosted) {
+      const step = () => {
+        if (closed) return;
+        const flow = data.flows[cursor.current];
+        if (!flow) {
+          setPlaying(false);
+          return;
+        }
+        cursor.current += 1;
+        setCount(cursor.current);
+        setSelected(flow);
+        if (cursor.current >= data.flows.length) setPlaying(false);
+        else timer = window.setTimeout(step, speed);
+      };
+      timer = window.setTimeout(step, 0);
+      return () => {
+        closed = true;
+        clearTimeout(timer);
+      };
+    }
     const ws = new WebSocket(
       `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/replay`,
     );
@@ -542,9 +564,11 @@ function App() {
                     <span>{queue?.remaining} QUERIES REMAINING</span>
                   </div>
                   <p className="notice">
-                    Feedback is saved to this browser session’s SQLite queue. It
-                    does not update the deployed model. A new-family label is an
-                    analyst hypothesis.
+                    {hosted
+                      ? "Feedback stays in this tab’s browser storage and is not sent to a server."
+                      : "Feedback is saved to this browser session’s SQLite queue."}{" "}
+                    It does not update the deployed model. A new-family label is
+                    an analyst hypothesis.
                   </p>
                   {!queue?.reviews.length ? (
                     <div className="empty">
