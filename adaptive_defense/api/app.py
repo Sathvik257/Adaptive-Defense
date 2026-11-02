@@ -7,10 +7,12 @@ import sqlite3
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+
+from adaptive_defense.monitoring import score_shift
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -68,6 +70,14 @@ def create_app(artifact=None, database=None):
     def experiment():
         ready()
         return {key:dataset[key] for key in ('dataset','projection','policy','flows','metrics','windows')}
+
+    @app.get('/api/monitoring')
+    def monitoring(count: int = Query(default=0, ge=0), window: int = Query(default=64, ge=2, le=1024)):
+        ready()
+        try:
+            return score_shift([flow['score'] for flow in dataset['flows']], count, window)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     @app.post('/api/session')
     def session(request:Request,response:Response):
