@@ -26,4 +26,4 @@ This command combines the inputs and makes custom partitions. Report it as custo
 
 Check small-family sample counts and available compute before running all folds. The bundled website continues to show the completed synthetic experiment. Publish real-dataset results only after training and evaluation complete and their artifacts are reviewed.
 
-Current status: audit tooling prepared and fixture-tested. Real CSVs, audit report and real-data training results are pending.
+Current status: mirror CSVs were audited and a custom held-out-Fuzzers pilot completed after excluding conflicting feature groups. See [pilot results and reproducible commands](UNSW_PILOT.md).

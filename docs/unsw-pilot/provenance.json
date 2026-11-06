@@ -1,0 +1,54 @@
+{
+  "dataset": "UNSW-NB15 candidate files",
+  "source": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
+  "files": [
+    {
+      "file": "unsw-mirror-train.csv",
+      "sha256": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559",
+      "rows": 82332,
+      "features": 42,
+      "categories": {
+        "normal": 37000,
+        "generic": 18871,
+        "exploits": 11132,
+        "fuzzers": 6062,
+        "dos": 4089,
+        "reconnaissance": 3496,
+        "analysis": 677,
+        "backdoor": 583,
+        "shellcode": 378,
+        "worms": 44
+      },
+      "duplicate_feature_rows": 28386
+    },
+    {
+      "file": "unsw-mirror-test.csv",
+      "sha256": "bec7dd5ec88dc2a0ccc7a07879d338395ed7421750f675fd0339e07dfe0648fa",
+      "rows": 175341,
+      "features": 42,
+      "categories": {
+        "normal": 56000,
+        "generic": 40000,
+        "exploits": 33393,
+        "fuzzers": 18184,
+        "dos": 12264,
+        "reconnaissance": 10491,
+        "analysis": 2000,
+        "backdoor": 1746,
+        "shellcode": 1133,
+        "worms": 130
+      },
+      "duplicate_feature_rows": 74301
+    }
+  ],
+  "cross_file_feature_overlap": 1302,
+  "conflicting_feature_groups": 2445,
+  "feature_labels_consistent": false,
+  "protocol": "Existing experiment and benchmark commands create custom deduplicated LOAO splits. Official partition membership is superseded.",
+  "provenance": "Local hashes identify inputs. Schema checks do not authenticate their source.",
+  "download_source": "https://huggingface.co/datasets/Mireu-Lab/UNSW-NB15/tree/3eb02c4",
+  "preparation_policy": "Exclude every feature group with conflicting binary labels or attack categories before custom LOAO partitioning. No majority relabeling.",
+  "excluded_rows": 40400,
+  "retained_rows": 217273,
+  "mirror_naming": "train.csv has 82332 rows; test.csv has 175341. Inputs combined for custom LOAO only."
+}

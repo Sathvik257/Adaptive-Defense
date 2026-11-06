@@ -24,3 +24,18 @@ def test_reject_mismatched_labels(tmp_path):
     frame.to_csv(paths[0],index=False)
     with pytest.raises(ValueError, match="disagree"):
         inspect_pair(*paths)
+
+
+def test_preparation_excludes_entire_conflict_group(tmp_path, monkeypatch):
+    from tools.prepare_unsw import main
+    frame, paths = files(tmp_path)
+    frame.loc[1, "attack_cat"] = "Exploits"
+    frame.to_csv(paths[1], index=False)
+    output = tmp_path / "prepared.csv"
+    monkeypatch.setattr("sys.argv", ["prepare", "--train", str(paths[0]), "--test", str(paths[1]), "--output", str(output), "--source", "fixture"])
+    main()
+    prepared = pd.read_csv(output)
+    assert len(prepared) == 2
+    assert set(prepared.attack_cat) == {"normal"}
+    with pytest.raises(ValueError, match="new output"):
+        main()

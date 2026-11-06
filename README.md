@@ -59,7 +59,7 @@ These results do **not** establish DQN superiority. Recall must be considered al
 - Preprocessing fits training records only; duplicate feature records cannot cross partitions.
 - Held-out families are excluded from initial training and validation. Adaptation uses separate labeled records; adapted results are distinct from frozen results.
 - Partitions are custom and replay order is synthetic, not a chronological production stream.
-- Real UNSW-NB15 evaluation and independent lab-traffic validation remain outstanding.
+- A first UNSW-NB15 custom held-out-Fuzzers pilot is complete. See [pilot results and provenance](docs/UNSW_PILOT.md). Multi-seed validation and independent lab-traffic validation remain outstanding.
 - Analyst labels do not update the running detector. MITRE mappings are contextual references, not model predictions.
 
 ## Run locally
