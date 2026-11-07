@@ -25,15 +25,22 @@ function load(): Promise<Artifact> {
     }));
 }
 function reviews(): Review[] {
-  const raw = sessionStorage.getItem(key);
+  let raw: string | null;
+  try {
+    raw = sessionStorage.getItem(key);
+  } catch {
+    throw Error("Browser storage is blocked. Allow site storage to use analyst reviews.");
+  }
   if (!raw) return [];
   try {
     const value = JSON.parse(raw);
     if (
       Array.isArray(value) &&
       value.length <= 20 &&
+      new Set(value.map((r) => r?.flow_id)).size === value.length &&
       value.every(
         (r) =>
+          r !== null &&
           typeof r.flow_id === "string" &&
           [null, "benign", "attack", "new-family"].includes(r.label),
       )
@@ -88,7 +95,11 @@ export async function demoApi(
         throw Error("Invalid label");
       existing.label = label;
     } else throw Error("Unsupported demo operation");
-    sessionStorage.setItem(key, JSON.stringify(rows));
+    try {
+      sessionStorage.setItem(key, JSON.stringify(rows));
+    } catch {
+      throw Error("Review could not be saved. Check site storage permissions and available space, then retry.");
+    }
     return { status: "saved", model_updated: false };
   }
   throw Error("Unsupported demo operation");
