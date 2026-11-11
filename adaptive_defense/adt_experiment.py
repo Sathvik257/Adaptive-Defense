@@ -11,21 +11,22 @@ import torch
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import precision_recall_curve
 from .adt import ADT, replay
+from .adt_evaluation import paper_metrics, robustness
 from .data import split_data, clean_features, make_preprocessor, generate_demo
-from .models import Autoencoder
+from .adt_architecture import ReferenceAutoencoder, architecture_manifest
 from .experiment import metrics
 
 
-def fit_autoencoder(train, validation, epochs, seed):
+def fit_autoencoder(train, validation, epochs, seed, latent=100, batch_size=8000):
     torch.manual_seed(seed)
-    model = Autoencoder(train.shape[1])
+    model = ReferenceAutoencoder(train.shape[1],latent)
     optimizer = torch.optim.Adam(model.parameters(), lr=.001)
     x = torch.tensor(train, dtype=torch.float32)
     v = torch.tensor(validation, dtype=torch.float32)
     history, best, weights = [], float('inf'), None
     for epoch in range(epochs):
         losses = []
-        for idx in torch.randperm(len(x)).split(256):
+        for idx in torch.randperm(len(x)).split(batch_size):
             loss = torch.linalg.vector_norm(x[idx]-model(x[idx]), dim=1).mean()
             optimizer.zero_grad()
             loss.backward()
@@ -56,7 +57,7 @@ def static_threshold(scores, labels):
 
 def run(args):
     torch.set_num_threads(2)
-    if min(args.epochs,args.episodes,args.controller_rows,args.k,args.action_interval,args.target_every)<1:
+    if min(args.epochs,args.episodes,args.controller_rows,args.k,args.action_interval,args.target_every,args.latent,args.ae_batch_size,args.batch_size)<1:
         raise ValueError('All training sizes and intervals must be positive.')
     out = Path(args.output)
     out.mkdir(parents=True,exist_ok=False)
@@ -71,7 +72,7 @@ def run(args):
     x = {k:np.asarray(prep.transform(clean_features(v,columns)),dtype=np.float32) for k,v in splits.items()}
     y = {k:v.label.to_numpy(dtype=int) for k,v in splits.items()}
     print('Training benign-only L2 autoencoder...',flush=True)
-    ae, ae_history = fit_autoencoder(x['train'][y['train']==0],x['validation'][y['validation']==0],args.epochs,args.seed)
+    ae, ae_history = fit_autoencoder(x['train'][y['train']==0],x['validation'][y['validation']==0],args.epochs,args.seed,args.latent,args.ae_batch_size)
     raw = {k:l2_scores(ae,v) for k,v in x.items()}
     # Paper requires [0,1] but leaves score normalization unspecified.
     # Freeze an initial-training maximum; never fit scaling to evaluation scores.
@@ -89,10 +90,10 @@ def run(args):
     agent, history = ADT(args.seed), []
     print(f'Training ADT on {count} development flows for {args.episodes} episodes...',flush=True)
     for episode in range(args.episodes):
-        epsilon = max(.05,1-episode/max(1,args.episodes*.8))
+        epsilon = max(.001,1-episode/max(1,args.episodes*.99))
         _, trace = replay(agent,scores['train'][chosen],y['train'][chosen],k=args.k,
             training=True,epsilon=epsilon,action_interval=args.action_interval)
-        loss = agent.update(batch_size=min(64,count))  # One gradient update per episode.
+        loss = agent.update(batch_size=min(args.batch_size,count))  # One gradient update per episode.
         if (episode+1)%args.target_every == 0:
             agent.target.load_state_dict(agent.online.state_dict())
         history.append({'episode':episode+1,'epsilon':epsilon,'loss':loss,
@@ -105,6 +106,10 @@ def run(args):
     results = pd.DataFrame([{'model':name,**metrics(y['test'],pred,splits['test'].attack_cat,
                          audit['held_out_categories'])} for name,pred in predictions.items()])
     results.to_csv(out/'metrics.csv',index=False)
+    pd.DataFrame([{'model':name,**paper_metrics(y['test'],pred)} for name,pred in predictions.items()]).to_csv(out/'paper_metrics.csv',index=False)
+    blocks, comparison = robustness(y['test'],predictions,'Static AE (validation F1)')
+    blocks.to_csv(out/'robustness_blocks.csv',index=False)
+    comparison.to_csv(out/'robustness_comparison.csv',index=False)
     records = splits['test'][['_fingerprint','label','attack_cat']].copy()
     records['anomaly_score'] = scores['test']
     for name,pred in predictions.items():
@@ -119,10 +124,10 @@ def run(args):
     torch.save(ae.state_dict(),out/'autoencoder.pt')
     torch.save(agent.online.state_dict(),out/'adt.pt')
     with (out/'pipeline.pkl').open('wb') as handle:
-        pickle.dump({'format':'adt-flow-v1','preprocessor':prep,'columns':columns,
+        pickle.dump({'format':'adt-flow-v2','architecture':architecture_manifest(x['train'].shape[1],args.latent),'latent':args.latent,'preprocessor':prep,'columns':columns,
                      'dimension':x['train'].shape[1],'score_scale':scale,'static_threshold':threshold,
                      'k':args.k,'alpha':.9},handle)
-    summary = {'method':'ADT flow adaptation v1','paper':'https://arxiv.org/abs/2312.01488v1',
+    summary = {'method':'ADT flow adaptation v2', 'architecture':architecture_manifest(x['train'].shape[1],args.latent),'paper':'https://arxiv.org/abs/2312.01488v1',
         'dataset':'SYNTHETIC DEMONSTRATION' if args.demo else 'USER-SUPPLIED NETWORK FLOW CSV',
         'configuration':vars(args),'audit':audit,'tau':1,'alpha':.9,'beta':.1,
         'controller_training_rows':count,'controller_fraction_of_unique_data':count/audit['unique_records'],
@@ -137,7 +142,8 @@ def run(args):
             'No-feedback ablation masks the confusion features and is not the paper protocol.',
             'Held-out-family feedback enters later states; this is not wholly label-free zero-day detection.',
             'DSPOT and the paper datasets have not been reproduced.',
-            'Network widths, optimizer settings, normalization and startup handling are implementation choices.']}
+            'Topology and optimizer defaults follow later author code; paper equations take precedence where it differs.',
+            'Normalization, startup handling and UNSW latent size are explicit adaptation choices.']}
     # Separate manifest name prevents legacy dashboards from loading incompatible checkpoints.
     (out/'adt_summary.json').write_text(json.dumps(summary,indent=2),encoding='utf-8')
     html = '<!doctype html><meta charset="utf-8"><title>Adaptive Defense - ADT experiment</title>'
@@ -158,12 +164,15 @@ def main():
     parser.add_argument('--output',required=True)
     parser.add_argument('--holdout',nargs='+',default=['Fuzzers'])
     parser.add_argument('--seed',type=int,default=42)
-    parser.add_argument('--epochs',type=int,default=20)
-    parser.add_argument('--episodes',type=int,default=2000)
+    parser.add_argument('--epochs',type=int,default=30)
+    parser.add_argument('--episodes',type=int,default=20000)
     parser.add_argument('--controller-rows',type=int,default=256)
     parser.add_argument('--k',type=int,default=2)
     parser.add_argument('--action-interval',type=int,default=1)
-    parser.add_argument('--target-every',type=int,default=50)
+    parser.add_argument('--target-every',type=int,default=100)
+    parser.add_argument('--latent',type=int,default=100)
+    parser.add_argument('--ae-batch-size',type=int,default=8000)
+    parser.add_argument('--batch-size',type=int,default=256)
     run(parser.parse_args())
 
 

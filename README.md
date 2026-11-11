@@ -12,6 +12,8 @@ An offline network intrusion detection research project that combines a benign-t
 
 The project now includes an implementation of **[ADT: Agent-based Dynamic Thresholding for Anomaly Detection](https://arxiv.org/abs/2312.01488v1)** (Yang, Howley and Schukat, 2023): benign-only L2 autoencoder scoring, a six-feature history state, binary threshold actions and episode-end DQN updates.
 
+Read the **[architecture audit](docs/ADT_AUDIT.md)** for verified author layer sizes and differences between the supplied paper and later source code. New ADT runs use the corrected topology; the previous pilot remains labelled v1.
+
 Read the **[paper alignment and run guide](docs/ADT_PAPER.md)** for exact equations, UNSW-NB15 adaptations and feedback assumptions. The new experiment reports static-threshold, feedback-assisted ADT, no-feedback ADT and previous-label baseline results. Its models are separate from the original dashboard's three-action controller.
 
 ```powershell

@@ -60,11 +60,16 @@ class History:
 
 
 class ADT:
-    def __init__(self, seed=42, gamma=.95, learning_rate=3e-4, capacity=20000):
+    def __init__(self, seed=42, gamma=.99, learning_rate=1e-4, capacity=20000, hidden=(32,32,16)):
         torch.manual_seed(seed)
         self.rng = np.random.default_rng(seed)
-        self.online = nn.Sequential(nn.Linear(6,64), nn.ReLU(), nn.Linear(64,64),
-                                    nn.ReLU(), nn.Linear(64,2))
+        widths = (6, *hidden, 2)
+        layers = []
+        for i, (left, right) in enumerate(zip(widths, widths[1:])):
+            layers.append(nn.Linear(left, right))
+            if i < len(widths)-2:
+                layers.append(nn.ReLU())
+        self.online = nn.Sequential(*layers)
         self.target = copy.deepcopy(self.online)
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=learning_rate)
         self.memory = deque(maxlen=capacity)

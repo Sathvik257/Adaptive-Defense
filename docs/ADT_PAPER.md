@@ -2,6 +2,8 @@
 
 **Base paper:** Xue Yang, Enda Howley and Michael Schukat, *ADT: Agent-based Dynamic Thresholding for Anomaly Detection*, ALA 2023, [arXiv:2312.01488v1](https://arxiv.org/abs/2312.01488v1).
 
+> **Architecture audit update:** new v2 runs use the verified later-author topology. See [the full audit](ADT_AUDIT.md) for paper-versus-code discrepancies, corrected defaults and remaining reproduction gaps. The pilot below is a historical v1 result.
+
 ## What the project now implements
 
 The new `adaptive_defense.adt_experiment` command implements the paper's central autoencoder + ADT method as an explicitly labelled **UNSW-NB15 flow adaptation**. The original project controller and saved demo remain a separate legacy baseline. Its eight inputs and three actions are not the paper's model.
@@ -15,7 +17,7 @@ The new `adaptive_defense.adt_experiment` command implements the paper's central
 | Section 3.3.1: TP, TN, FP, FN fractions | Counts over the previous k decisions, divided by k; requires true feedback after each prediction |
 | Section 3.3.2: actions 0 and 1 | Action is the threshold itself; anomaly iff score > action |
 | Equation 8: weighted confusion counts | 0.9 × (TP − FP − FN) + 0.1 × TN over the updated rolling history |
-| Algorithm 1 | Replay memory, target network, epsilon-greedy exploration, one MSE gradient update at episode end; target sync every C episodes |
+| Algorithm 1 | Replay memory, target network, epsilon-greedy exploration, one MSE gradient update at episode end; target sync every C episodes (default 100) |
 | Inference | l=1, frozen model weights; feedback and no-feedback runs reported separately |
 | Section 4.2 static baseline | Select threshold maximizing validation F1, never test F1 |
 
@@ -25,9 +27,9 @@ The code stores a transition after **each step**, interpreting Algorithm 1's sur
 
 The paper evaluates Yahoo A1Benchmark, SWaT and WADI, **not UNSW-NB15**. Its Table 1 uses 20,000 episodes, tau=10/12/10, k=2, l=1/10/10 and alpha/beta=0.9/0.1. This project's flow CLI intentionally fixes tau=1. Do not interpret random adjacent flows as contiguous attack segments.
 
-The paper does not specify enough details to recover its exact networks, optimizer, replay capacity, normalization of L2 scores, startup history or target-update period. We use the existing dense AE (d–128–64–16–64–128–d), a 6–64–64–2 ReLU Q-network, Adam (AE 0.001, DQN 0.0003), gamma=0.95, replay capacity=20,000, minibatch up to 64 and target sync every 50 episodes. Scores are L2 error divided by the maximum initial-training error, clipped to [0,1]; the scale is frozen and clipping counts are saved. These are documented implementation choices, not claimed paper hyperparameters.
+The PDF does not specify hidden-layer widths. After locating the author's later public code, v2 uses an input-dependent AE with sigmoid output and a 6–32–32–16–2 Q-network. Source revision, layers, activations and paper settings are saved in the architecture manifest. We retain the PDF's L2 scoring, sample variance and weighted reward where the later code differs. See [the audit](ADT_AUDIT.md) for full provenance.
 
-The default controller subset is 256 training flows, with both classes represented. Its actual fraction of unique data is recorded, so the paper's <1% claim is not assumed for every dataset. The subset excludes held-out attack families. It is replayed in fixed seeded order; this is not chronological traffic. The default is a 2,000-episode development run; the saved pilot uses 500. Neither is presented as the paper's 20,000-episode experiment.
+New default runs use 20,000 episodes, k=2, l=1 for unordered flows, 256 controller flows, gamma=.99, DQN learning rate=.0001 and target sync every 100 episodes. The historical v1 pilot used 500 episodes and different hidden layers; its results cannot describe v2. Neither an UNSW experiment nor matching the episode count reproduces the original temporal datasets.
 
 DSPOT, the paper's other baseline, and the three original datasets have **not** been reproduced. Existing Random Forest/MLP results belong to the legacy experiment and must not be mixed with a differently preprocessed ADT result as a controlled comparison.
 
@@ -74,7 +76,7 @@ The saved pickle is a trusted local artifact, not a safe upload format. Raw data
 
 “Our base paper is ADT by Yang, Howley and Schukat. We train an autoencoder on normal traffic and use its reconstruction error as an anomaly score. A DQN then chooses an active or passive threshold using recent scores and feedback about earlier decisions. We adapted the method to UNSW-NB15 and evaluate it against a static threshold, with and without feedback. We keep unfamiliar attack families out of initial training, but report feedback-assisted results separately because the paper's state needs previous labels.”
 
-## Completed UNSW-NB15 pilot (seed 42)
+## Historical v1 UNSW-NB15 pilot (seed 42)
 
 The first run used 10 AE epochs, 500 ADT episodes, 256 controller-training flows and held out Fuzzers. Evaluation used 31,127 test flows. This is an early pilot, not a converged reproduction.
 

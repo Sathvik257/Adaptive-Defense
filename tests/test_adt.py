@@ -53,3 +53,37 @@ def test_validation_static_threshold_ties():
     scores = np.array([.1,.2,.2,.9])
     threshold = static_threshold(scores,np.array([0,1,1,1]))
     np.testing.assert_array_equal(scores>threshold,[False,True,True,True])
+
+
+def test_reference_architecture_and_legacy_shapes():
+    import torch
+    from torch import nn
+    from adaptive_defense.adt_architecture import ReferenceAutoencoder, PAPER_SETTINGS
+    ae = ReferenceAutoencoder(612,100)
+    assert [(m.in_features,m.out_features) for m in ae.modules() if isinstance(m,nn.Linear)] == [(612,306),(306,153),(153,100),(100,153),(153,306),(306,612)]
+    output = ae(torch.zeros(2,612))
+    assert output.shape == (2,612) and ((output>=0)&(output<=1)).all()
+    assert [(m.in_features,m.out_features) for m in ADT().online if isinstance(m,nn.Linear)] == [(6,32),(32,32),(32,16),(16,2)]
+    assert ADT(hidden=(64,64)).online[-1].in_features == 64
+    assert PAPER_SETTINGS['SWaT'] == dict(episodes=20000,tau=12,k=2,l=10,alpha=.9,beta=.1)
+
+
+def test_paper_metric_edge_cases_and_robustness():
+    from adaptive_defense.adt_evaluation import paper_metrics, robustness
+    assert paper_metrics([0,0],[0,0]) == dict(precision=1.,recall=1.,f1=1.)
+    assert paper_metrics([0,1],[1,0]) == dict(precision=0.,recall=0.,f1=0.)
+    blocks, comparison = robustness(np.zeros(20),{'static':np.zeros(20),'adt':np.zeros(20)},'static')
+    assert len(blocks) == 20
+    assert (comparison.wilcoxon_two_sided_p == 1).all()
+
+
+def test_terminal_bellman_target_does_not_bootstrap():
+    import torch
+    agent = ADT(7,learning_rate=0)
+    for parameter in agent.online.parameters():
+        parameter.data.zero_()
+    for parameter in agent.target.parameters():
+        parameter.data.fill_(10)
+    state = np.zeros(6,dtype=np.float32)
+    agent.memory.append((state,0,2.,state,True))
+    assert agent.update(1) == pytest.approx(4.)
