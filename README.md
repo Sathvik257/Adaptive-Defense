@@ -6,7 +6,17 @@ An offline network intrusion detection research project that combines a benign-t
 
 **[Open the live demo](https://web-flame-eight-75.vercel.app/)** · [Research results](docs/RESEARCH_RESULTS.md) · [Benchmark guide](docs/BENCHMARK.md) · [Deployment guide](docs/VERCEL.md)
 
-> **Research status:** the published demo and reported experiments use synthetic traffic. Held-out attack families simulate unfamiliar attacks; they do not prove real-world zero-day detection. The project does not capture or block live traffic.
+> **Research status:** the hosted demo uses synthetic traffic. A separate UNSW-NB15 pilot and a paper-aligned ADT experiment are available locally. Held-out families are a proxy for unfamiliar attacks, not proof of real-world zero-day detection. The project does not capture or block live traffic.
+
+## Base paper and new ADT experiment
+
+The project now includes an implementation of **[ADT: Agent-based Dynamic Thresholding for Anomaly Detection](https://arxiv.org/abs/2312.01488v1)** (Yang, Howley and Schukat, 2023): benign-only L2 autoencoder scoring, a six-feature history state, binary threshold actions and episode-end DQN updates.
+
+Read the **[paper alignment and run guide](docs/ADT_PAPER.md)** for exact equations, UNSW-NB15 adaptations and feedback assumptions. The new experiment reports static-threshold, feedback-assisted ADT, no-feedback ADT and previous-label baseline results. Its models are separate from the original dashboard's three-action controller.
+
+```powershell
+.venv\Scripts\python.exe -m adaptive_defense.adt_experiment --demo --output runs/adt-demo --epochs 10 --episodes 500
+```
 
 ## Explore the demo
 
@@ -19,7 +29,7 @@ The [hosted console](https://web-flame-eight-75.vercel.app/) uses the original d
 
 The Vercel version runs entirely in the browser. Review labels stay in that tab's session storage; they are not sent to a server or used to retrain a model. The hosted site performs no live model inference or training.
 
-## How it works
+## How the original demo works
 
 ```text
 Traffic records → Train-fitted preprocessing → Autoencoder reconstruction score

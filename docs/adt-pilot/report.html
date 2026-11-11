@@ -1,0 +1,71 @@
+<!doctype html><meta charset="utf-8"><title>Adaptive Defense - ADT experiment</title><style>body{font:16px system-ui;margin:40px auto;max-width:1100px;color:#16372e;background:#f4f7f5}table{border-collapse:collapse;background:white}td,th{padding:12px;border-bottom:1px solid #ddd}h1{color:#126548}</style><h1>Adaptive Defense / ADT</h1><p>Paper-aligned controller · UNSW flow adaptation · research evaluation</p><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>precision</th>
+      <th>recall</th>
+      <th>f1</th>
+      <th>false_positive_rate</th>
+      <th>unseen_recall</th>
+      <th>known_recall</th>
+      <th>tn</th>
+      <th>fp</th>
+      <th>fn</th>
+      <th>tp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Static AE (validation F1)</td>
+      <td>0.8875</td>
+      <td>0.3442</td>
+      <td>0.496</td>
+      <td>0.0625</td>
+      <td>0.1548</td>
+      <td>0.6452</td>
+      <td>11997</td>
+      <td>800</td>
+      <td>12021</td>
+      <td>6309</td>
+    </tr>
+    <tr>
+      <td>ADT (previous-label feedback)</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>12797</td>
+      <td>0</td>
+      <td>18330</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>ADT (no-feedback ablation)</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>12797</td>
+      <td>0</td>
+      <td>18330</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Previous-label baseline</td>
+      <td>0.5900</td>
+      <td>0.5900</td>
+      <td>0.590</td>
+      <td>0.5872</td>
+      <td>0.5892</td>
+      <td>0.5911</td>
+      <td>5282</td>
+      <td>7515</td>
+      <td>7516</td>
+      <td>10814</td>
+    </tr>
+  </tbody>
+</table><h2>How to read these results</h2><ul><li>UNSW adaptation, not reproduction on Yahoo/SWaT/WADI.</li><li>Randomized flow replay has no verified temporal ordering; tau=1.</li><li>Paper-mode evaluation receives each true label AFTER its decision; weights remain frozen.</li><li>No-feedback ablation masks the confusion features and is not the paper protocol.</li><li>Held-out-family feedback enters later states; this is not wholly label-free zero-day detection.</li><li>DSPOT and the paper datasets have not been reproduced.</li><li>Network widths, optimizer settings, normalization and startup handling are implementation choices.</li></ul>
