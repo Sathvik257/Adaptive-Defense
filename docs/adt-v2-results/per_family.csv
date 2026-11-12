@@ -1,0 +1,77 @@
+split,model,family,rows,alert_rate,metric
+validation,Static AE (validation F1),Normal,12797,0.23482066109244354,false-positive rate
+validation,Static AE (validation F1),analysis,67,0.746268656716418,attack recall
+validation,Static AE (validation F1),backdoor,52,0.36538461538461536,attack recall
+validation,Static AE (validation F1),dos,544,0.6746323529411765,attack recall
+validation,Static AE (validation F1),exploits,3818,0.7289156626506024,attack recall
+validation,Static AE (validation F1),generic,1093,0.9542543458371455,attack recall
+validation,Static AE (validation F1),reconnaissance,1263,0.41488519398258117,attack recall
+validation,Static AE (validation F1),shellcode,217,0.41935483870967744,attack recall
+validation,Static AE (validation F1),worms,24,1.0,attack recall
+validation,ADT (previous-label feedback),Normal,12797,0.9103696178791905,false-positive rate
+validation,ADT (previous-label feedback),analysis,67,0.9253731343283582,attack recall
+validation,ADT (previous-label feedback),backdoor,52,0.9230769230769231,attack recall
+validation,ADT (previous-label feedback),dos,544,0.9301470588235294,attack recall
+validation,ADT (previous-label feedback),exploits,3818,0.9114719748559456,attack recall
+validation,ADT (previous-label feedback),generic,1093,0.9258920402561757,attack recall
+validation,ADT (previous-label feedback),reconnaissance,1263,0.9184481393507522,attack recall
+validation,ADT (previous-label feedback),shellcode,217,0.9262672811059908,attack recall
+validation,ADT (previous-label feedback),worms,24,0.9166666666666666,attack recall
+validation,ADT (no-feedback ablation),Normal,12797,1.0,false-positive rate
+validation,ADT (no-feedback ablation),analysis,67,1.0,attack recall
+validation,ADT (no-feedback ablation),backdoor,52,1.0,attack recall
+validation,ADT (no-feedback ablation),dos,544,1.0,attack recall
+validation,ADT (no-feedback ablation),exploits,3818,1.0,attack recall
+validation,ADT (no-feedback ablation),generic,1093,1.0,attack recall
+validation,ADT (no-feedback ablation),reconnaissance,1263,1.0,attack recall
+validation,ADT (no-feedback ablation),shellcode,217,1.0,attack recall
+validation,ADT (no-feedback ablation),worms,24,1.0,attack recall
+validation,Previous-label baseline,Normal,12797,0.35695866218644995,false-positive rate
+validation,Previous-label baseline,analysis,67,0.3582089552238806,attack recall
+validation,Previous-label baseline,backdoor,52,0.28846153846153844,attack recall
+validation,Previous-label baseline,dos,544,0.35110294117647056,attack recall
+validation,Previous-label baseline,exploits,3818,0.36694604504976425,attack recall
+validation,Previous-label baseline,generic,1093,0.3321134492223239,attack recall
+validation,Previous-label baseline,reconnaissance,1263,0.33808392715756136,attack recall
+validation,Previous-label baseline,shellcode,217,0.3686635944700461,attack recall
+validation,Previous-label baseline,worms,24,0.3333333333333333,attack recall
+test,Static AE (validation F1),Normal,12797,0.23083535203563335,false-positive rate
+test,Static AE (validation F1),analysis,68,0.8529411764705882,attack recall
+test,Static AE (validation F1),backdoor,53,0.3018867924528302,attack recall
+test,Static AE (validation F1),dos,544,0.7040441176470589,attack recall
+test,Static AE (validation F1),exploits,3818,0.7407019381875327,attack recall
+test,Static AE (validation F1),fuzzers,11250,0.33084444444444444,attack recall
+test,Static AE (validation F1),generic,1093,0.9478499542543458,attack recall
+test,Static AE (validation F1),reconnaissance,1263,0.43151227236737927,attack recall
+test,Static AE (validation F1),shellcode,217,0.5299539170506913,attack recall
+test,Static AE (validation F1),worms,24,1.0,attack recall
+test,ADT (previous-label feedback),Normal,12797,0.8131593342189576,false-positive rate
+test,ADT (previous-label feedback),analysis,68,0.8235294117647058,attack recall
+test,ADT (previous-label feedback),backdoor,53,0.7547169811320755,attack recall
+test,ADT (previous-label feedback),dos,544,0.8198529411764706,attack recall
+test,ADT (previous-label feedback),exploits,3818,0.8150864326872708,attack recall
+test,ADT (previous-label feedback),fuzzers,11250,0.8215111111111111,attack recall
+test,ADT (previous-label feedback),generic,1093,0.8243366880146387,attack recall
+test,ADT (previous-label feedback),reconnaissance,1263,0.8194774346793349,attack recall
+test,ADT (previous-label feedback),shellcode,217,0.847926267281106,attack recall
+test,ADT (previous-label feedback),worms,24,0.8333333333333334,attack recall
+test,ADT (no-feedback ablation),Normal,12797,1.0,false-positive rate
+test,ADT (no-feedback ablation),analysis,68,1.0,attack recall
+test,ADT (no-feedback ablation),backdoor,53,1.0,attack recall
+test,ADT (no-feedback ablation),dos,544,1.0,attack recall
+test,ADT (no-feedback ablation),exploits,3818,1.0,attack recall
+test,ADT (no-feedback ablation),fuzzers,11250,1.0,attack recall
+test,ADT (no-feedback ablation),generic,1093,1.0,attack recall
+test,ADT (no-feedback ablation),reconnaissance,1263,1.0,attack recall
+test,ADT (no-feedback ablation),shellcode,217,1.0,attack recall
+test,ADT (no-feedback ablation),worms,24,1.0,attack recall
+test,Previous-label baseline,Normal,12797,0.5872470110182074,false-positive rate
+test,Previous-label baseline,analysis,68,0.6470588235294118,attack recall
+test,Previous-label baseline,backdoor,53,0.6037735849056604,attack recall
+test,Previous-label baseline,dos,544,0.6066176470588235,attack recall
+test,Previous-label baseline,exploits,3818,0.5864326872708224,attack recall
+test,Previous-label baseline,fuzzers,11250,0.5892444444444445,attack recall
+test,Previous-label baseline,generic,1093,0.5773101555352241,attack recall
+test,Previous-label baseline,reconnaissance,1263,0.6009501187648456,attack recall
+test,Previous-label baseline,shellcode,217,0.6036866359447005,attack recall
+test,Previous-label baseline,worms,24,0.7916666666666666,attack recall

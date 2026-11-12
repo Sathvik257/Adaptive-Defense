@@ -100,3 +100,7 @@ For a CSV with the same feature schema, without labels:
 ```
 
 This is explicitly the no-feedback ablation. For offline evaluation only, append `--feedback` and supply a binary `label` column to reveal each label after its prediction. Each invocation resets the history; it is not a continuous live service. Only load checkpoints you created or trust.
+
+## Completed corrected-model evaluation
+
+See [the full ADT v2 validation report](ADT_V2_RESULTS.md) for the 30-AE-epoch, 20,000-DQN-episode run on UNSW-NB15 and independent checkpoint-reload checks. It supersedes pending-training status but does not erase the historical v1 pilot.

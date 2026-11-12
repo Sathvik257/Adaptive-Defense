@@ -84,3 +84,7 @@ Here 612 is an illustrative SWaT flattened dimension (12×51), not the UNSW feat
 ## Validation of this correction
 
 The full project suite passed **57 tests**, including layer dimensions, sigmoid output bounds, terminal Bellman targets, feedback causality and paper metric edge cases. An end-to-end synthetic check used two AE epochs and three controller episodes to verify artifact generation and v2 checkpoint reload. It is a software check, not an accuracy benchmark. Reloading the historical v1 checkpoint produced exactly the same 32 smoke-sample predictions as before the change. No new full UNSW v2 training result is claimed.
+
+## Full v2 training and validation
+
+The full 30-epoch / 20,000-episode UNSW-NB15 run and independent checkpoint-reload validation are now complete. See [ADT v2 results](ADT_V2_RESULTS.md). The earlier statement that no full v2 run was available describes the architecture-audit checkpoint only. The new result shows excessive false alarms and does not establish practical detector effectiveness.

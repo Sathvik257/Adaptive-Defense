@@ -1,0 +1,24 @@
+{
+  "run": "adt-v2-unsw-42",
+  "source_sha256": "ad4ce8ab6c77e8f2918fc2281336264cda65378b73b473612848b2ada71a988d",
+  "checkpoint_sha256": {
+    "autoencoder.pt": "b5d4e5b3b6d083be25fa34bed29a08e60d7293992f421c1ab915f49121d5c228",
+    "adt.pt": "e40a4aded1c2186d67c1a0f20da6016c2dec6c2718a8467d1aa83e0d0b292fd3",
+    "pipeline.pkl": "539533a09e771a55de94f8a996adfe86af1b6976fc9c1afb545eb69a82c40601"
+  },
+  "checks": {
+    "source_hash_match": true,
+    "saved_partition_order_match": true,
+    "disjoint_feature_fingerprints": true,
+    "heldout_absent_from_train_and_validation": true,
+    "reloaded_test_predictions_match": true,
+    "checkpoint_bytes_unchanged": true
+  },
+  "limitations": [
+    "Validation is a development split used for AE checkpoint and static-threshold selection.",
+    "Test is the same held-out split reported at training completion, not a new external dataset.",
+    "Feedback mode reveals labels after each prediction; no-feedback mode uses no labels.",
+    "Only one seed and one held-out family; randomized flow replay is not chronological.",
+    "No synthetic-to-UNSW transfer experiment was run."
+  ]
+}

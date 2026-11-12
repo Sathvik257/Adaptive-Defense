@@ -20,6 +20,8 @@ Read the **[paper alignment and run guide](docs/ADT_PAPER.md)** for exact equati
 .venv\Scripts\python.exe -m adaptive_defense.adt_experiment --demo --output runs/adt-demo --epochs 10 --episodes 500
 ```
 
+**[Completed ADT v2 training and UNSW-NB15 validation](docs/ADT_V2_RESULTS.md):** feedback-assisted ADT reached 82.0% attack recall with an 81.3% false-positive rate. The no-feedback policy flagged every flow. These results do not establish practical detection.
+
 ## Explore the demo
 
 The [hosted console](https://web-flame-eight-75.vercel.app/) uses the original dark interface and requires no installation.
