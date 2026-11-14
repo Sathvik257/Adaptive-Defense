@@ -95,3 +95,31 @@ Both strategies requested 1,556 labels (1,554 delivered), with budget 5%, delay 
 | Boundary proximity | 8.90% | 15.84% | 4.99% | 8.77% |
 
 Boundary review reduces false alarms but loses recall and F1. It remains opt-in; periodic is still the default. This result does not establish superiority. [Aggregate outputs](calibrated-review-results/metrics.csv) include [per-family results](calibrated-review-results/per_family.csv) and [score-shift warnings](calibrated-review-results/score_shift.csv). All 63 tests passed. No frontend changes were made.
+
+## Research-informed evaluation update
+
+A review of [Sun et al., ICML 2024](https://proceedings.mlr.press/v235/sun24h.html) reinforces that adaptive thresholding and formal error control are established research topics; this project does not implement that paper's confidence-sequence algorithm. The [Zaro 2026 preprint](https://arxiv.org/abs/2611.00713) distinguishes robustness on modified known attacks from held-out-family generalization; it is a preprint, not evidence that our own system generalizes.
+
+Implemented improvements:
+
+- `score_diagnostics.csv`: ROC-AUC and average precision for all attacks versus benign traffic, and separately for each held-out family versus benign traffic. Attack prevalence is included as the random-ranking reference for average precision. These describe the raw AE score ranking, not the DQN's predictions or performance at a chosen operating point.
+- `--order-seeds 42 43 44`: replay the same test records in independently shuffled orders at a fixed 5% calibration level, 5% review budget, and 32-row delay. `order_sensitivity.csv` keeps every result. These seeds change replay order only; they are not training seeds, independent datasets, or chronological traffic. Labels remain aligned with shuffled flows and arrive only after each review delay.
+- Partition-order and checkpoint-integrity checks now raise explicit errors and remain enabled with `python -O`.
+- Existing output directories are rejected before expensive evaluation starts, and multi-source runs are explicitly rejected by this single-source validator.
+
+Example:
+
+```powershell
+.venv/Scripts/python.exe -m tools.evaluate_calibrated_adt --run runs/adt-v2-unsw-42 --csv data/raw/unsw-consistent.csv --output runs/adt-diagnostics-nov14 --focused --order-seeds 42 43 44
+```
+
+These changes improve diagnosis and reproducibility, not the trained model itself. All operating points remain exploratory because the test set was already inspected. Do not use these diagnostics to tune a detector and then report the same test set as untouched validation.
+
+
+### Diagnostic findings
+
+All-attack raw-score ROC-AUC is 0.6435 and average precision is 0.6909 (attack prevalence 0.5889). For held-out Fuzzers versus Normal, ROC-AUC is 0.5804 and average precision is 0.5340 (prevalence 0.4678). The weak held-out score ranking helps explain why threshold calibration alone loses recall. It does not prove that no other detector can succeed.
+
+Across replay-order seeds 42, 43, and 44, periodic-review attack recall ranges from 9.43% to 9.49%, with FPR 5.24% to 5.26%. Boundary-review recall ranges from 9.00% to 9.01%, with FPR 4.89% to 5.04%. These are observed ranges over three permutations, not confidence intervals. The original experimental conclusion is unchanged.
+
+[Score diagnostics](adt-diagnostics-results/score_diagnostics.csv), [all replay-order results](adt-diagnostics-results/order_sensitivity.csv), and [provenance](adt-diagnostics-results/report.json) are retained. All 66 tests passed. No model weights were changed.

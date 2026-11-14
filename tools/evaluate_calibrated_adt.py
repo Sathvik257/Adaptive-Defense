@@ -14,6 +14,7 @@ from adaptive_defense.data import split_data, clean_features
 from adaptive_defense.calibrated_adt import calibrated_threshold, gated_replay
 from tools.validate_adt import evaluate
 from adaptive_defense.score_monitor import monitor_scores
+from adaptive_defense.research_diagnostics import score_diagnostics, replay_order, require_equal
 
 
 def main():
@@ -22,19 +23,23 @@ def main():
     p.add_argument('--csv', required=True)
     p.add_argument('--output', required=True)
     p.add_argument('--focused', action='store_true', help='Compare review strategies at fixed alpha=.05 and budget=.05.')
+    p.add_argument('--order-seeds', nargs='*', type=int, default=[], help='Optional shuffled replay seeds; not training seeds.')
     args = p.parse_args()
     torch.set_num_threads(2)
     root, source, out = Path(args.run), Path(args.csv), Path(args.output)
+    if out.exists():
+        p.error('Output exists; choose a fresh directory.')
     summary = json.loads((root/'adt_summary.json').read_text())
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
-    if digest != summary['sources'][0]['sha256']:
+    if len(summary['sources']) != 1 or digest != summary['sources'][0]['sha256']:
         raise ValueError('Dataset hash mismatch.')
     splits, columns, audit = split_data(pd.read_csv(source), summary['configuration']['holdout'], summary['configuration']['seed'])
     manifest = pd.read_csv(root/'split_manifest.csv', dtype={'_fingerprint':str})
     if not manifest._fingerprint.is_unique:
         raise ValueError('Overlapping fingerprints.')
     for name, frame in splits.items():
-        assert frame._fingerprint.tolist() == manifest.loc[manifest.split == name, '_fingerprint'].tolist()
+        require_equal(frame._fingerprint.tolist(), manifest.loc[manifest.split == name, '_fingerprint'].tolist(),
+                      f'Saved partition order mismatch: {name}')
     with (root/'pipeline.pkl').open('rb') as f:
         bundle = pickle.load(f)
     if bundle['format'] != 'adt-flow-v2' or columns != bundle['columns']:
@@ -71,13 +76,33 @@ def main():
                                         budget=budget,delay=delay,k=bundle['k'],review_strategy=strategy)
                 record('Calibrated budgeted ADT',pred,alpha,budget,delay,
                        sum(r['queried'] for r in trace),trace[-1]['delivered'],strategy)
-    assert hashes == {n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in hashes}
+    diagnostics = [{'scope':'all attacks vs normal', **score_diagnostics(y,raw)}]
+    for family in audit['held_out_categories']:
+        mask = (y == 0) | test.attack_cat.str.lower().eq(family).to_numpy()
+        diagnostics.append({'scope':family+' vs normal', **score_diagnostics(y[mask],raw[mask])})
+    order_results = []
+    for seed in dict.fromkeys(args.order_seeds):
+        order = replay_order(len(y),seed)
+        ordered_y, ordered_raw = y[order],raw[order]
+        threshold = calibrated_threshold(cal,.05)
+        for strategy in ('periodic','boundary'):
+            prediction,trace = gated_replay(agent,ordered_raw,threshold,
+                feedback=lambda i:int(ordered_y[i]),budget=.05,delay=32,k=bundle['k'],review_strategy=strategy)
+            order_results.append(dict(replay_seed=seed,strategy=strategy,alpha=.05,budget=.05,delay=32,
+                queries=sum(r['queried'] for r in trace),heldout_recall=float(prediction[held[order]].mean()),
+                **evaluate(ordered_y,prediction)))
+    require_equal(hashes, {n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in hashes},
+                  'Checkpoint changed during evaluation.')
     out.mkdir(parents=True,exist_ok=False)
+    pd.DataFrame(diagnostics).to_csv(out/'score_diagnostics.csv',index=False)
+    if order_results:
+        pd.DataFrame(order_results).to_csv(out/'order_sensitivity.csv',index=False)
     pd.DataFrame(rows).to_csv(out/'metrics.csv',index=False)
     pd.DataFrame(families).to_csv(out/'per_family.csv',index=False)
     pd.DataFrame(monitor_scores(cal,raw)).to_csv(out/'score_shift.csv',index=False)
-    report = dict(source_sha256=digest,checkpoint_sha256=hashes,calibration_rows=len(cal),test_rows=len(test),thresholds=thresholds,
-        limitations=['Score-shift warnings compare mixed test traffic to benign reference; not evidence of temporal drift.',
+    report = dict(replay_order_seeds=list(dict.fromkeys(args.order_seeds)), source_sha256=digest,checkpoint_sha256=hashes,calibration_rows=len(cal),test_rows=len(test),thresholds=thresholds,
+        limitations=['Replay-order seeds do not retrain models or replace multi-training-seed validation.',
+        'Score-shift warnings compare mixed test traffic to benign reference; not evidence of temporal drift.',
         'Boundary proximity is a review heuristic, not calibrated model uncertainty.',
         'One seed and held-out Fuzzers family; test already examined in prior research.',
         'Frozen policy trained for original state; review-history state is a deployment ablation, not retrained RL.',
