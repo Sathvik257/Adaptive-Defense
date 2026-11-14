@@ -1,0 +1,51 @@
+model,strategy,alpha,budget,delay,family,rows,alert_rate
+Static AE validation-F1,none,,,,Normal,12797,0.23083535203563335
+Static AE validation-F1,none,,,,analysis,68,0.8529411764705882
+Static AE validation-F1,none,,,,backdoor,53,0.3018867924528302
+Static AE validation-F1,none,,,,dos,544,0.7040441176470589
+Static AE validation-F1,none,,,,exploits,3818,0.7407019381875327
+Static AE validation-F1,none,,,,fuzzers,11250,0.33084444444444444
+Static AE validation-F1,none,,,,generic,1093,0.9478499542543458
+Static AE validation-F1,none,,,,reconnaissance,1263,0.43151227236737927
+Static AE validation-F1,none,,,,shellcode,217,0.5299539170506913
+Static AE validation-F1,none,,,,worms,24,1.0
+Original ADT full feedback,none,,1.0,1.0,Normal,12797,0.8131593342189576
+Original ADT full feedback,none,,1.0,1.0,analysis,68,0.8235294117647058
+Original ADT full feedback,none,,1.0,1.0,backdoor,53,0.7547169811320755
+Original ADT full feedback,none,,1.0,1.0,dos,544,0.8198529411764706
+Original ADT full feedback,none,,1.0,1.0,exploits,3818,0.8150864326872708
+Original ADT full feedback,none,,1.0,1.0,fuzzers,11250,0.8215111111111111
+Original ADT full feedback,none,,1.0,1.0,generic,1093,0.8243366880146387
+Original ADT full feedback,none,,1.0,1.0,reconnaissance,1263,0.8194774346793349
+Original ADT full feedback,none,,1.0,1.0,shellcode,217,0.847926267281106
+Original ADT full feedback,none,,1.0,1.0,worms,24,0.8333333333333334
+Calibrated AE only,none,0.05,,,Normal,12797,0.05282488083144487
+Calibrated AE only,none,0.05,,,analysis,68,0.029411764705882353
+Calibrated AE only,none,0.05,,,backdoor,53,0.0
+Calibrated AE only,none,0.05,,,dos,544,0.05330882352941176
+Calibrated AE only,none,0.05,,,exploits,3818,0.028810895756940808
+Calibrated AE only,none,0.05,,,fuzzers,11250,0.09368888888888889
+Calibrated AE only,none,0.05,,,generic,1093,0.47026532479414457
+Calibrated AE only,none,0.05,,,reconnaissance,1263,0.023752969121140142
+Calibrated AE only,none,0.05,,,shellcode,217,0.018433179723502304
+Calibrated AE only,none,0.05,,,worms,24,0.125
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,Normal,12797,0.052746737516605455
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,analysis,68,0.029411764705882353
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,backdoor,53,0.0
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,dos,544,0.05330882352941176
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,exploits,3818,0.028810895756940808
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,fuzzers,11250,0.09333333333333334
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,generic,1093,0.4684354986276304
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,reconnaissance,1263,0.023752969121140142
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,shellcode,217,0.018433179723502304
+Calibrated budgeted ADT,periodic,0.05,0.05,32.0,worms,24,0.125
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,Normal,12797,0.04985543486754708
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,analysis,68,0.029411764705882353
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,backdoor,53,0.0
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,dos,544,0.051470588235294115
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,exploits,3818,0.026977475117862755
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,fuzzers,11250,0.08773333333333333
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,generic,1093,0.43824336688014637
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,reconnaissance,1263,0.022169437846397466
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,shellcode,217,0.013824884792626729
+Calibrated budgeted ADT,boundary,0.05,0.05,32.0,worms,24,0.08333333333333333

@@ -172,3 +172,7 @@ The latest Python check passed 46 tests. Both frontend build modes and browser c
 Vercel builds one public `web` service and routes `/` to it. The hosted build publishes static assets and an allowlisted synthetic console artifact; it does not deploy the Python research stack. See [deployment instructions](docs/VERCEL.md) to reproduce the setup.
 
 For the prepared UNSW-NB15 CSV audit and exact experiment commands, see [UNSW-NB15 evaluation](docs/UNSW_NB15.md).
+
+### Experimental research extension
+
+See [calibrated ADT with budgeted, delayed feedback](docs/CALIBRATED_ADT.md) for the implementation, reproducible comparison, and novelty limitations. This pilot does not establish superiority or publication readiness.
