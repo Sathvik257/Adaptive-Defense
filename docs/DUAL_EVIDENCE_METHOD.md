@@ -78,3 +78,30 @@ Offline prediction with a trusted method run:
 No labels are used by default. Add `--feedback` only to simulate delayed analyst answers from a CSV containing ground truth. The command checks base checkpoint hashes and does not train on input traffic.
 
 The additional [static-threshold controls](dual-evidence-results/static_threshold_controls.csv) show that a fixed nominal 1% dual-evidence threshold has exactly the same confusion counts as all three controllers on both validation and test. The static control uses zero reviews. Therefore this pilot does not justify the controller complexity or review cost. All 71 tests passed, and the prediction command completed a 200-flow no-feedback check.
+
+## Features beyond the paper-based implementation
+
+| Capability | Paper-based ADT implementation in this project | Experimental extension |
+| --- | --- | --- |
+| Anomaly evidence | Reconstruction score | Reconstruction plus benign latent geometry |
+| Controller state | Six rolling-history values | Twelve evidence, budget, pending-review and relevance values |
+| Actions | Binary threshold | Three thresholds crossed with query/no-query |
+| Feedback | Previous labels in feedback mode | 5% query cap, 32-row delay, age/similarity weighting |
+| Analyst output | Score, threshold, decision | Dual scores, decision margin, dominant evidence, reconstruction contributors |
+| Controls | Static AE and feedback ablation | Latent-only, dual-only, unweighted and periodic-review variants, matched static thresholds |
+
+These are implementation differences, not proof of scholarly novelty or performance superiority. The original frontend and ADT baseline remain intact.
+
+### Inspectable predictions
+
+The prediction CSV now includes `raw_reconstruction_l2`, `latent_mahalanobis_squared`, the two empirical ranks, `dual_score`, selected `threshold`, `decision_margin`, `dominant_evidence`, and `top_reconstruction_features` (JSON).
+
+Each explanation lists the three transformed feature dimensions with largest squared residual, their residual values, and their fraction of total squared reconstruction error. Numeric contributions are in preprocessed units, and categorical dimensions may be one-hot columns. Fractions are not attack probabilities or causal importance. These explain reconstruction error only, not latent distance or the DQN's action. When latent evidence dominates, the reconstruction contributors must not be presented as explaining the whole decision.
+
+Use `--detector dual-static` to run the calibrated dual-evidence baseline without a controller or review labels. The existing default `--detector relevance` selects the experimental trained controller. This option makes comparisons available without implying that the controller is preferred.
+
+```powershell
+.venv/Scripts/python.exe -m tools.predict_dual_evidence --base-run runs/adt-v2-unsw-42 --method-run runs/relevance-controller-nov18 --csv your-flows.csv --output explained-static.csv --detector dual-static
+```
+
+Verification on 18 November 2026: all 73 tests passed. Three 200-flow prediction runs covered static, no-feedback controller, and delayed-feedback controller modes. Decision margins matched predictions, top residual shares reconciled with reconstruction error, no-feedback predictions matched the previous command output, and feedback delivery obeyed the 32-row delay and 5% prefix cap. No new accuracy claim follows from these software checks.

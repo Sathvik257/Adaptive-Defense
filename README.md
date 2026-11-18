@@ -149,7 +149,7 @@ npm run build --prefix web
 npm run build:vercel --prefix web
 ```
 
-The latest Python check passed 46 tests. Both frontend build modes and browser checks for replay, review persistence, benchmarks, reset and mobile overflow have passed. If Windows denies access to its temporary directory, pass a fresh project-local `--basetemp` to pytest.
+The latest Python check passed 73 tests (18 November 2026). Both frontend build modes and browser checks for replay, review persistence, benchmarks, reset and mobile overflow have passed. If Windows denies access to its temporary directory, pass a fresh project-local `--basetemp` to pytest.
 
 ## Documentation
 
