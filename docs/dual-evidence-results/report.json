@@ -1,0 +1,32 @@
+{
+  "controller_episodes": 300,
+  "controller_seed": 42,
+  "policy_thresholds": [
+    0.924880336035948,
+    0.956022272150044,
+    0.9926150239327928
+  ],
+  "source_sha256": "ad4ce8ab6c77e8f2918fc2281336264cda65378b73b473612848b2ada71a988d",
+  "checkpoint_sha256": {
+    "pipeline.pkl": "539533a09e771a55de94f8a996adfe86af1b6976fc9c1afb545eb69a82c40601",
+    "autoencoder.pt": "b5d4e5b3b6d083be25fa34bed29a08e60d7293992f421c1ab915f49121d5c228",
+    "adt.pt": "e40a4aded1c2186d67c1a0f20da6016c2dec6c2718a8467d1aa83e0d0b292fd3"
+  },
+  "benign_fit_rows": 51184,
+  "calibration_rows": 8530,
+  "thresholds": {
+    "reconstruction": 1.6936088800430298,
+    "latent_distance": 35.30524669371207,
+    "dual_max": 0.956022272150044
+  },
+  "protocol": "Fixed max of benign-training empirical ranks; alpha=.05; frozen encoder; seed42 Fuzzers holdout.",
+  "limitations": [
+    "Existing validation used for AE checkpoint selection; exploratory development comparison.",
+    "Test already examined in prior work; not a fresh confirmation set.",
+    "Latent geometry and rank fusion have prior art; no novelty claim.",
+    "Only one training seed and held-out family; controller training is a pilot, not established convergence.",
+    "Controller uses offline known-family labels for rewards; inference state uses only queried delayed labels.",
+    "Controller threshold choices use nominal 10%,5%,1% gates; fixed FP penalty 5 is not a guaranteed FPR constraint.",
+    "Relevance is similarity in two score ranks, not full feature or latent-space similarity."
+  ]
+}

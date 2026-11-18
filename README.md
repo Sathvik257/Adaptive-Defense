@@ -176,3 +176,5 @@ For the prepared UNSW-NB15 CSV audit and exact experiment commands, see [UNSW-NB
 ### Experimental research extension
 
 See [calibrated ADT with budgeted, delayed feedback](docs/CALIBRATED_ADT.md) for the implementation, reproducible comparison, and novelty limitations. This pilot does not establish superiority or publication readiness.
+
+See the [dual-evidence and feedback-relevance pilot](docs/DUAL_EVIDENCE_METHOD.md) for the separately trained experimental method, comparisons, and limitations.
