@@ -1,0 +1,6 @@
+Dataset,Method,Precision,Recall,F1,Autonomy
+SWaT,Static (Optimal Baseline),0.99061,0.60013,0.74745,Autonomous (No Feedback)
+SWaT,DSPOT / EVT (Paper Baseline),0.98347,0.63913,0.77476,Autonomous (No Feedback)
+SWaT,ADT (Yang et al. 2023 - With Feedback),0.0,0.0,0.0,NOT Autonomous (Requires Instant True Labels)
+SWaT,ADT (Paper Ablation - No Feedback),0.0,0.0,0.0,Autonomous (Collapses / Degenerate)
+SWaT,U-CADT (Our Proposed Method),0.97014,0.61673,0.75408,100% Autonomous (Zero Feedback Needed)

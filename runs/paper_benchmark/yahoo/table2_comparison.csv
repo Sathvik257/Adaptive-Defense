@@ -1,0 +1,5 @@
+Dataset,Method,Precision,Recall,F1,Autonomous (No Feedback)
+Yahoo,Static (Optimal Baseline),0.16971279373368145,0.29988465974625145,0.21675698207586494,Yes
+Yahoo,ADT (Yang et al. 2023 - With Feedback),0.0,0.0,0.0,No (Requires True Labels)
+Yahoo,ADT (Ablation - No Feedback),0.0,0.0,0.0,Yes (Degenerates)
+Yahoo,U-CADT (Our Method),0.14682644192783775,0.6430219146482122,0.23906518010291594,Yes (Fully Autonomous)

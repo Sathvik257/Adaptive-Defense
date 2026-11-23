@@ -1,9 +1,11 @@
 .venv/
 __pycache__/
 .pytest_cache/
-data/raw/*.csv
+data/raw/**
+!data/raw/README.md
 runs/*
 !runs/demo/
+!runs/paper_benchmark/
 *.pyc
 .test-tmp/
 Adaptive-Defense-Project.zip
