@@ -2,11 +2,11 @@
 from pathlib import Path
 import streamlit as st
 from adaptive_defense.run_store import discover_runs, load_experiment
-from adaptive_defense.ui import analysis, method, overview, replay, upload
+from adaptive_defense.ui import analysis, benchmark, method, overview, replay, upload
 from adaptive_defense.ui.components import hero
 
 ROOT = Path(__file__).resolve().parents[2]
-VIEWS = {"Overview": overview, "Compare": analysis, "Replay": replay,
+VIEWS = {"Overview": overview, "Paper Benchmark": benchmark, "Compare": analysis, "Replay": replay,
          "Analyze CSV": upload, "About": method}
 
 def main():

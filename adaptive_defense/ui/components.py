@@ -6,6 +6,7 @@ import streamlit as st
 def hero(view, flow_count, model_count):
     descriptions = {
         "Overview": ("Know what gets through.", "See the signals, understand the trade-offs, and make every detection decision visible."),
+        "Paper Benchmark": ("Empirical Rigor.", "Direct Table 2 evaluation on Yahoo and SWaT benchmark datasets from Yang et al. (2023)."),
         "Compare": ("Let the evidence decide.", "Compare detectors side by side, then look closely at the decisions behind the scores."),
         "Replay": ("Follow every decision.", "Move through saved traffic windows and watch the detection threshold respond."),
         "Analyze CSV": ("Put your traffic in focus.", "Upload compatible network flows and inspect the detector’s predictions."),

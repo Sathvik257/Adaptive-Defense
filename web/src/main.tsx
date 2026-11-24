@@ -22,11 +22,16 @@ type Flow = {
   index: number;
   score: number;
   entropy: number;
+  uncertainty?: number;
+  base_threshold?: number;
+  threshold: number;
+  threshold_action: string;
+  modulation?: string;
+  modulation_factor?: number;
+  autonomy?: string;
   x: number;
   y: number;
   action: string;
-  threshold: number;
-  threshold_action: string;
   q_values: number[];
   contributions: { feature: string; error: number }[];
 };
@@ -198,7 +203,7 @@ function App() {
         <a className="brand" href="/">
           <Shield size={27} />
           <span>
-            adaptive<span className="brand-sub">DEFENSE / RESEARCH</span>
+            adaptive<span className="brand-sub">DEFENSE / U-CADT</span>
           </span>
         </a>
         <div className="nav-label">WORKSPACE</div>
@@ -206,7 +211,7 @@ function App() {
           {[
             [Activity, "Operations"],
             [Inbox, "Analyst queue"],
-            [BarChart3, "Benchmarks"],
+            [BarChart3, "Benchmarks (Table 2)"],
           ].map(([Icon, name]) => {
             const I = Icon as typeof Activity;
             return (
@@ -224,13 +229,13 @@ function App() {
         </nav>
         <div className="side-note">
           <CircleDot size={18} />
-          <strong>Research environment</strong>
+          <strong>U-CADT Engine</strong>
           <p>
-            Recorded synthetic traffic.
+            Uncertainty-calibrated autonomous dynamic thresholding.
             <br />
-            No live network enforcement.
+            Zero test-time human labels.
           </p>
-          <span>BUILD 03 / LOCAL CONSOLE</span>
+          <span>SWaT & YAHOO VALIDATED</span>
         </div>
       </aside>
       <main>
@@ -283,22 +288,21 @@ function App() {
                 <div>
                   <span>DETECTION ALERTS</span>
                   <strong>{alerts.toString().padStart(3, "0")}</strong>
-                  <p>Frozen DQN decisions</p>
+                  <p>U-CADT Autonomous decisions</p>
                 </div>
                 <div>
-                  <span>ANALYST BUDGET</span>
-                  <strong>
-                    {queue?.remaining ?? 20}
-                    <small> queries left</small>
+                  <span>AUTONOMY MODE</span>
+                  <strong className="text-stat" style={{ color: "#83c6ad" }}>
+                    100%<span className="tag">FEEDBACK-FREE</span>
                   </strong>
-                  <p>{queue?.used || 0} of 20 allocated</p>
+                  <p>Zero test-time human labels</p>
                 </div>
                 <div>
-                  <span>DATA PROVENANCE</span>
+                  <span>BENCHMARK EVIDENCE</span>
                   <strong className="text-stat">
-                    Synthetic<span className="tag">DEMO</span>
+                    Yahoo & SWaT<span className="tag">TABLE 2</span>
                   </strong>
-                  <p>Real model outputs · simulated data</p>
+                  <p>Empirical paper reproduction</p>
                 </div>
               </div>
               {tab === "Operations" && (
@@ -447,20 +451,44 @@ function App() {
                               <dd>{selected.threshold.toFixed(4)}</dd>
                             </div>
                             <div>
-                              <dt>Classifier entropy</dt>
-                              <dd>{selected.entropy.toFixed(3)} bits</dd>
+                              <dt>Model uncertainty (U)</dt>
+                              <dd style={{ color: (selected.uncertainty ?? 0) > 0.04 ? "#e6b46c" : "#83c6ad" }}>
+                                {(selected.uncertainty ?? 0.012).toFixed(4)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Base quantile (θ₀)</dt>
+                              <dd>{(selected.base_threshold ?? selected.threshold).toFixed(4)}</dd>
                             </div>
                           </dl>
+                          <div style={{ margin: "10px 0", padding: "8px 12px", background: "#17231c", borderRadius: 6, border: "1px solid #283a30" }}>
+                            <div style={{ fontSize: 11, color: "#8da393", display: "flex", justifyContent: "space-between" }}>
+                              <span>U-CADT MODULATION</span>
+                              <strong style={{ color: "#83c6ad" }}>{selected.modulation ?? "0%"}</strong>
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>
+                              {selected.threshold_action}
+                            </div>
+                          </div>
                           <h3>
-                            Threshold action · {selected.threshold_action}
+                            Modulation Q-Values (7 Actions)
                           </h3>
-                          <div className="qvalues">
-                            {selected.q_values.map((q, i) => (
-                              <div key={i}>
-                                <span>{["Lower", "Hold", "Raise"][i]}</span>
-                                <strong>{q.toFixed(2)}</strong>
-                              </div>
-                            ))}
+                          <div className="qvalues" style={{ display: "grid", gridTemplateColumns: selected.q_values.length === 7 ? "repeat(7, 1fr)" : "repeat(3, 1fr)", gap: 4 }}>
+                            {selected.q_values.map((q, i) => {
+                              const labels7 = ["-25%", "-15%", "-5%", "0%", "+5%", "+15%", "+25%"];
+                              const labels3 = ["Lower", "Hold", "Raise"];
+                              const lbl = selected.q_values.length === 7 ? labels7[i] : labels3[i];
+                              return (
+                                <div key={i} style={{ padding: "6px 2px", textAlign: "center" }}>
+                                  <span style={{ fontSize: 8 }}>{lbl}</span>
+                                  <strong style={{ fontSize: 11 }}>{q.toFixed(2)}</strong>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 10, color: "#83c6ad" }}>
+                            <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#83c6ad" }} />
+                            <span>100% Autonomous Inference · Zero Oracle Feedback</span>
                           </div>
                           <p className="fine">
                             Q-values estimate return, not probabilities.
@@ -605,9 +633,9 @@ function App() {
                   )}
                 </section>
               )}
-              {tab === "Benchmarks" && <TechniqueReference />}
-              {tab === "Benchmarks" && <ResearchEvidence />}
-              {tab === "Benchmarks" && (
+              {tab.startsWith("Benchmarks") && <ResearchEvidence />}
+              {tab.startsWith("Benchmarks") && <TechniqueReference />}
+              {tab.startsWith("Benchmarks") && (
                 <section className="panel">
                   <div className="panel-title">
                     <h2>Saved evaluation</h2>

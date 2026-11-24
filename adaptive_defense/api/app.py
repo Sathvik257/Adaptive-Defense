@@ -69,7 +69,8 @@ def create_app(artifact=None, database=None):
     @app.get('/api/experiment')
     def experiment():
         ready()
-        return {key:dataset[key] for key in ('dataset','projection','policy','flows','metrics','windows')}
+        keys = ('dataset','projection','policy','flows','metrics','windows','table2_benchmark','method_name','autonomy_status')
+        return {key:dataset[key] for key in keys if key in dataset}
 
     @app.get('/api/monitoring')
     def monitoring(count: int = Query(default=0, ge=0), window: int = Query(default=64, ge=2, le=1024)):

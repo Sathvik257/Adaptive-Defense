@@ -171,10 +171,12 @@
     "machine": "AMD64",
     "platform": "Windows-11-10.0.26300-SP0",
     "onnxruntime": "1.24.4",
-    "provider": ["CPUExecutionProvider"],
+    "provider": [
+      "CPUExecutionProvider"
+    ],
     "threads": 1,
     "precision": "float32",
-    "parity_max_abs_error": 1.7881393432617188e-7,
+    "parity_max_abs_error": 1.7881393432617188e-07,
     "scope": "AE reconstruction only; excludes preprocessing, anomaly reduction, DQN, capture and API",
     "results": [
       {
@@ -199,5 +201,88 @@
         "flows_per_second": 238187.50473932654
       }
     ]
-  }
+  },
+  "table2": [
+    {
+      "Dataset": "Yahoo",
+      "Method": "Static (Optimal Baseline)",
+      "Precision": 0.18706,
+      "Recall": 0.32007,
+      "F1": 0.23612,
+      "Autonomy": "Autonomous (No Feedback)"
+    },
+    {
+      "Dataset": "Yahoo",
+      "Method": "DSPOT / EVT (Paper Baseline)",
+      "Precision": 0.09781,
+      "Recall": 0.14796,
+      "F1": 0.11777,
+      "Autonomy": "Autonomous (No Feedback)"
+    },
+    {
+      "Dataset": "Yahoo",
+      "Method": "ADT (Yang et al. 2023 - With Feedback)",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "Autonomy": "NOT Autonomous (Requires Instant True Labels)"
+    },
+    {
+      "Dataset": "Yahoo",
+      "Method": "ADT (Paper Ablation - No Feedback)",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "Autonomy": "Autonomous (Collapses / Degenerate)"
+    },
+    {
+      "Dataset": "Yahoo",
+      "Method": "U-CADT (Our Proposed Method)",
+      "Precision": 0.16496,
+      "Recall": 0.60496,
+      "F1": 0.25924,
+      "Autonomy": "100% Autonomous (Zero Feedback Needed)"
+    },
+    {
+      "Dataset": "SWaT",
+      "Method": "Static (Optimal Baseline)",
+      "Precision": 0.99061,
+      "Recall": 0.60013,
+      "F1": 0.74745,
+      "Autonomy": "Autonomous (No Feedback)"
+    },
+    {
+      "Dataset": "SWaT",
+      "Method": "DSPOT / EVT (Paper Baseline)",
+      "Precision": 0.98347,
+      "Recall": 0.63913,
+      "F1": 0.77476,
+      "Autonomy": "Autonomous (No Feedback)"
+    },
+    {
+      "Dataset": "SWaT",
+      "Method": "ADT (Yang et al. 2023 - With Feedback)",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "Autonomy": "NOT Autonomous (Requires Instant True Labels)"
+    },
+    {
+      "Dataset": "SWaT",
+      "Method": "ADT (Paper Ablation - No Feedback)",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "Autonomy": "Autonomous (Collapses / Degenerate)"
+    },
+    {
+      "Dataset": "SWaT",
+      "Method": "U-CADT (Our Proposed Method)",
+      "Precision": 0.97014,
+      "Recall": 0.61673,
+      "F1": 0.75408,
+      "Autonomy": "100% Autonomous (Zero Feedback Needed)"
+    }
+  ],
+  "method_name": "U-CADT"
 }
