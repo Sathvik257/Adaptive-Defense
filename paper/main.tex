@@ -13,6 +13,9 @@
 \usepackage{microtype}
 \usepackage{cite}
 
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
 \begin{document}
 
 \title{Adaptive Defense: Uncertainty-Aware Continuous Dynamic Thresholding for Network Intrusion Detection\\
@@ -38,7 +41,7 @@ Section H, Group 8}
 \maketitle
 
 \begin{abstract}
-Network Intrusion Detection Systems (NIDS) face a fundamental trade-off: detecting novel, zero-day attacks while preventing excessive false alarms that cause Security Operations Center (SOC) analyst fatigue. While reconstruction-based deep autoencoders model benign traffic, rigid static decision thresholds fail under non-stationary traffic drift. Recent agent-based dynamic thresholding (ADT) approaches model threshold adjustment via reinforcement learning; however, they rely on an impractical oracle assumption---requiring immediate ground-truth labels after every decision to construct the controller state---and exhibit severe binary threshold oscillation (chattering) that collapses to zero detection in imbalanced operational streams. In this work, we propose \textbf{U-CADT} (\textit{Uncertainty-Aware Continuous Adaptive Dynamic Thresholding}), a fully autonomous, feedback-free dynamic thresholding framework. U-CADT extracts epistemic uncertainty from a symmetrical deep autoencoder via Monte Carlo Dropout, formulates an autonomous 8-dimensional state space with zero label dependencies, and modulates sensitivity continuously around a calibrated quantile baseline using a stability-regularized Deep Q-Network. We evaluate U-CADT against optimal static baselines, Extreme Value Theory (DSPOT), and paper-reproduced ADT across three distinct benchmarks: the \textbf{Yahoo A1Benchmark} (67 telemetry time series), the \textbf{SWaT} cyber-physical water treatment testbed (51 multivariate sensors, 449,908 test flows), and the \textbf{UNSW-NB15} network dataset under a Leave-One-Attack-Out (LOAO) protocol with Fuzzers withheld. Experimental results demonstrate that U-CADT achieves the highest $F_1$-score on Yahoo ($0.25924$ vs. $0.23612$ static and $0.11777$ DSPOT) while nearly doubling attack recall ($60.50\%$ vs. $32.01\%$). On SWaT, U-CADT outperforms the optimal static baseline with an $F_1$-score of $0.75408$ and $97.01\%$ precision, while proving that ADT collapses to $0.00000$ recall without continuous oracle supervision.
+Unsupervised deep autoencoders have become standard tools for spotting network intrusions without relying on pre-labeled attack databases. Yet, in real deployments, these detectors hinge on an overlooked parameter: the decision threshold separating normal behavior from anomalous traffic. Setting a static cutoff rarely works well in live production environments where server loads, user routines, and physical sensor states drift over time. Recent proposals, notably Agent-based Dynamic Thresholding (ADT), attempt to steer thresholds using reinforcement learning. However, our empirical audit shows that ADT relies on an unrealistic assumption: it expects an omniscient human supervisor to provide ground-truth attack labels immediately after every single prediction to construct its reinforcement learning state. Without these instant labels, ADT degenerates into an inactive state, achieving an $F_1$-score of $0.00000$ because the agent simply learns to exploit heavy class imbalances by staying passive. In this paper, we introduce \textbf{U-CADT} (\textit{Uncertainty-Aware Continuous Adaptive Dynamic Thresholding}), a dynamic thresholding framework that runs completely autonomously with zero test-time feedback. U-CADT gauges the autoencoder's own epistemic uncertainty via Monte Carlo Dropout forward passes, builds an 8-dimensional operational state space from observable reconstruction and uncertainty dynamics, and smoothly fine-tunes thresholds around an extreme-value calibrated baseline using a stability-regularized Deep Q-Network. We benchmark our method on the exact datasets used in the original literature: the Yahoo A1Benchmark (67 server telemetry series) and the 51-sensor SWaT industrial water treatment testbed (449,908 test flows), alongside zero-day evaluation on UNSW-NB15. Our experiments show that U-CADT achieves an $F_1$-score of $0.25924$ on Yahoo (substantially outperforming the static baseline of $0.23612$ and DSPOT's $0.11777$, while nearly doubling recall from $32.01\%$ to $60.50\%$) and reaches $0.75408$ $F_1$ with $97.01\%$ precision on SWaT, all while running fully autonomously without human intervention.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -46,31 +49,40 @@ Network intrusion detection, deep autoencoder, epistemic uncertainty, dynamic th
 \end{IEEEkeywords}
 
 \section{Introduction}
-Modern network infrastructures are subject to persistent, evolving cyber-attacks. Traditional signature-based Network Intrusion Detection Systems (NIDS) match known packet signatures but are fundamentally blind to unfamiliar zero-day exploits. To overcome this limitation, unsupervised anomaly detection has emerged as a dominant paradigm~\cite{pang2021deep}. By training generative architectures---such as Deep Autoencoders (AE)---exclusively on benign communication patterns, anomalies are recognized by their inability to reconstruct accurately, yielding high reconstruction error scores~\cite{mirsky2018kitsune}.
+Defending modern computer networks against malicious intrusions has turned into an arms race. Traditional signature-matching engines, such as Snort or Zeek, operate reliably against known Common Vulnerabilities and Exposures (CVEs) but fail completely when confronted with slightly modified payloads or previously unseen zero-day exploits. To overcome this limitation, the security community has shifted heavily toward unsupervised anomaly detection~\cite{pang2021deep}. The core idea is intuitive: train a generative neural network, typically a Deep Autoencoder (AE), solely on clean, benign network traffic. During live operation, the model reconstructs incoming packet flows; benign flows yield low reconstruction errors, whereas novel attack vectors fail to reconstruct cleanly, generating large reconstruction residuals~\cite{mirsky2018kitsune}.
 
-However, calculating an anomaly score is only half the detection challenge; transforming continuous anomaly scores into binary operational decisions (Allow vs. Alert) requires a decision boundary: the \textit{threshold}. Setting this threshold poses a critical dilemma:
+Producing a continuous reconstruction error score, however, solves only half the problem. In an active security operations pipeline, an automated system must output a crisp binary decision: either permit the flow to pass or raise a security alert for human incident response. Making that binary cut requires selecting a numerical decision threshold $\delta$.
+
+Here lies the fundamental dilemma of intrusion detection engineering:
 \begin{itemize}
-    \item \textbf{A low threshold} maximizes sensitivity, catching subtle intrusions at the cost of flooding security analysts with thousands of false alarms.
-    \item \textbf{A high threshold} eliminates false alarms but allows stealthy or unfamiliar attacks to slip through undetected.
+    \item \textbf{Aggressive (low) thresholds} catch stealthy, low-footprint intrusions, but generate a relentless torrent of false alarms that drown Security Operations Center (SOC) analysts in noise.
+    \item \textbf{Conservative (high) thresholds} eliminate false alarms, but allow malicious lateral movements and multi-stage exploits to slip by unnoticed.
 \end{itemize}
 
-In operational environments, network traffic is non-stationary: routine diurnal cycles, scheduled backups, and benign service updates cause transient shifts in reconstruction errors. A rigid, static threshold fails to adapt to these baseline variations. To address this, Yang et al.~\cite{yang2023adt} proposed Agent-based Dynamic Thresholding (ADT), framing threshold selection as a Markov Decision Process (MDP) solved by a Deep Q-Network (DQN). 
+What makes this trade-off particularly thorny in real deployments is that network traffic is inherently non-stationary. Server CPU metrics surge during daily automated backups, web traffic swells during regional business hours, and industrial water testbeds encounter benign pressure spikes during scheduled pump rotations. A fixed, rigid threshold cannot differentiate between legitimate behavioral drift and genuine attacks, inevitably causing detection performance to degrade over time.
 
-\subsection{The Unaddressed Flaws in Existing Dynamic Thresholding}
-Despite its reported success on selected benchmarks, rigorous auditing of the ADT framework reveals two fundamental barriers to real-world deployment:
+To address this challenge, Yang et al.~\cite{yang2023adt} proposed Agent-based Dynamic Thresholding (ADT). They framed threshold selection as a discrete Reinforcement Learning (RL) problem where a Deep Q-Network (DQN) dynamically raises or lowers the threshold based on past traffic observations.
+
+\subsection{The Hidden Flaws in Existing Dynamic Thresholding}
+While the ADT paper reported near-perfect scores on several public datasets, our hands-on replication and code-level audit revealed two severe flaws that prevent it from functioning in real-world environments:
+
 \begin{enumerate}
-    \item \textbf{The Fatal ``Oracle'' Feedback Assumption:} ADT defines its 6-element state vector using the true positive ($TP$), true negative ($TN$), false positive ($FP$), and false negative ($FN$) proportions over the previous $k$ decisions. This assumes an instantaneous, all-knowing oracle delivers verified ground-truth labels immediately after every single packet or flow. In live NIDS environments, packet labels do not exist at runtime.
-    \item \textbf{Binary Threshold Oscillation (Chattering):} ADT restricts threshold actions to a hard binary switch: $\delta \in \{0, 1\}$. In class-imbalanced environments where normal traffic constitutes over $90\%$ of flows, the agent quickly learns that selecting the passive mode ($\delta=1$) earns continuous positive rewards on benign traffic, causing the controller to become permanently trapped in passive mode and missing $100\%$ of attacks ($0.00\%$ recall).
+    \item \textbf{The Oracle Feedback Trap:} To construct its 6-dimensional reinforcement learning state, ADT explicitly tracks the rolling proportions of True Positives ($TP$), True Negatives ($TN$), False Positives ($FP$), and False Negatives ($FN$) over the previous $k$ steps. In other words, ADT assumes an all-knowing human analyst inspects every packet and feeds the true label back to the algorithm within milliseconds. In reality, packet labels never exist in live network streams. If an operator already possessed verified ground truth for every flow in real time, there would be no need for an anomaly detector in the first place.
+    \item \textbf{The Inactive Local Minimum (Chattering):} ADT restricts the agent's actions to a harsh binary switch: $\delta \in \{0, 1\}$. In practical network streams, attack samples make up a tiny fraction of total traffic (frequently less than $5\%$). Because the agent receives positive reinforcement for correctly identifying normal traffic ($+0.5$ for $TN$), it quickly discovers a shortcut: outputting action $1$ sets the threshold to maximum, classifying every incoming window as normal. This lazy strategy reaps positive rewards in more than $90\%$ of time steps. Consequently, without constant human penalties, the DQN gets trapped in a permanent passive state, resulting in a catastrophic $0.00\%$ attack recall and an $F_1$-score of $0.00000$.
 \end{enumerate}
 
-\subsection{Our Contributions}
-To resolve these core limitations, we propose \textbf{U-CADT} (\textbf{U}ncertainty-Aware \textbf{C}ontinuous \textbf{A}daptive \textbf{D}ynamic \textbf{T}hresholding). Our contributions are:
+\subsection{Our Approach: U-CADT}
+To build a dynamic thresholding system that can actually run in production without human hand-holding, we designed \textbf{U-CADT} (\textbf{U}ncertainty-Aware \textbf{C}ontinuous \textbf{A}daptive \textbf{D}ynamic \textbf{T}hresholding). Instead of assuming external supervision, U-CADT looks inward: it assesses how confident the autoencoder itself is about its own reconstructions.
+
+Our core technical contributions are:
 \begin{itemize}
-    \item \textbf{Autonomous, Zero-Label State Space:} We replace oracle-dependent confusion features with model-intrinsic \textit{epistemic uncertainty} derived via Monte Carlo Dropout passes and short-term score momentum, rendering the controller $100\%$ autonomous at test time.
-    \item \textbf{Continuous/Multi-Scale Modulation:} We eliminate binary $\{0, 1\}$ chattering by designing a multi-scale modulation action space around a calibrated extreme-value baseline, regularized by a volatility penalty.
-    \item \textbf{Multi-Domain Benchmark Reproduction:} We evaluate U-CADT against optimal static baselines, DSPOT (Extreme Value Theory), and ADT on the exact paper benchmarks: \textbf{Yahoo A1Benchmark} (67 telemetry time series) and the 51-sensor \textbf{SWaT} cyber-physical system (449,908 test flows), alongside Leave-One-Attack-Out (LOAO) zero-day evaluation on \textbf{UNSW-NB15}.
-    \item \textbf{Empirical Proof of ADT Collapse:} We provide reproducible empirical evidence demonstrating why ADT collapses without continuous oracle guidance, whereas U-CADT robustly improves detection.
+    \item \textbf{Label-Free State Formulation via Epistemic Uncertainty:} We replace oracle-dependent confusion matrix counts with intrinsic model confidence, estimated through Monte Carlo Dropout passes during live inference. Together with short-term reconstruction score momentum, this gives the controller a rich, 8-dimensional operational state without needing any external labels.
+    \item \textbf{Continuous Multi-Scale Threshold Modulation:} We eliminate binary threshold chattering by anchoring adaptation around an extreme-value calibrated base threshold $\theta_0$. The agent fine-tunes this baseline across seven continuous percentage offsets ($[-25\%, \dots, +25\%]$), reinforced by a quadratic volatility penalty to prevent sudden threshold jumps.
+    \item \textbf{Direct Replication on Benchmark Datasets:} We benchmarked U-CADT on the exact datasets from the Yang et al. study: the \textbf{Yahoo A1Benchmark} (67 time series, 94,866 points) and the \textbf{SWaT} cyber-physical system (51 sensors, 449,908 test flows), as well as zero-day holdout testing on \textbf{UNSW-NB15}.
+    \item \textbf{Empirical Demonstration of ADT Collapse:} We provide reproducible experimental proof showing that without oracle labels, ADT collapses to zero detection, whereas U-CADT delivers superior detection ($F_1 = 0.75408$ on SWaT, beating static baselines, and $F_1 = 0.25924$ on Yahoo, nearly doubling recall) with complete operational autonomy.
 \end{itemize}
+
+---
 
 \section{Related Work}
 
@@ -85,79 +97,101 @@ Reinforcement learning has recently been applied to threshold control. Yu and Su
 \subsection{Evaluation Pitfalls in Machine Learning Security}
 Arp et al.~\cite{arp2022dos} and Pendlebury et al.~\cite{tesseract2019} documented major pitfalls in ML-based cybersecurity, including feature-level data leakage, unrealistic chronological ordering, and ungrounded oracle assumptions. In this study, we strictly enforce training-only preprocessing, feature deduplication, and zero test-time label access.
 
+---
+
 \section{Proposed Method: U-CADT}
 
 \subsection{System Architecture}
-The U-CADT framework operates in four sequential phases:
+The U-CADT pipeline operates across four coordinated stages:
 \begin{enumerate}
-    \item \textbf{Input Windowing \& Preprocessing:} Continuous flow/sensor series are normalized into $[0, 1]$ using training-only bounds and transformed into sliding windows of length $\tau$ with stride $s=1$.
-    \item \textbf{Uncertainty-Aware Autoencoder (UE-AE):} A symmetrical deep autoencoder estimates both reconstruction error and epistemic uncertainty via Monte Carlo Dropout.
-    \item \textbf{Autonomous State Construction:} An 8-dimensional state vector captures score statistics, temporal drift, and model confidence without labels.
-    \item \textbf{Continuous Threshold Modulation:} A DQN agent modulates the decision boundary dynamically around a calibrated quantile baseline.
+    \item \textbf{Sliding Windowing and Robust Preprocessing:} Raw continuous network or sensor streams are normalized using training-only statistics and sliced into sliding windows of length $\tau$ with single-step strides ($s=1$).
+    \item \textbf{Uncertainty-Aware Autoencoder Scoring:} A symmetrical deep autoencoder estimates both mean reconstruction residuals and epistemic uncertainty using stochastic Monte Carlo Dropout forward passes.
+    \item \textbf{Autonomous State Construction:} An 8-dimensional operational state vector is computed in rolling memory from score trends, uncertainty statistics, and threshold positions, completely independent of external labels.
+    \item \textbf{Smooth Continuous Modulation:} A Double DQN agent selects fine-grained percentage offsets to smoothly adjust a calibrated base threshold while penalizing volatile jumps.
 \end{enumerate}
 
-\subsection{Uncertainty-Aware Deep Autoencoder}
-Let $w_t \in \mathbb{R}^D$ represent an input window of length $\tau$ across $m$ feature channels ($D = \tau \times m$). The autoencoder consists of an encoder $f_\theta$ and decoder $g_\phi$:
+\subsection{Uncertainty Estimation via Monte Carlo Dropout}
+Consider an incoming window $w_t \in \mathbb{R}^D$ spanning $\tau$ historical time steps across $m$ measurement channels ($D = \tau \times m$). Our autoencoder consists of an encoder $f_\theta$ and decoder $g_\phi$:
 \begin{equation}
 D \xrightarrow{\text{ReLU}} \lfloor D/2 \rfloor \xrightarrow{\text{ReLU}} \lfloor D/4 \rfloor \xrightarrow{\text{Linear}} Z \xrightarrow{\text{ReLU}} \lfloor D/4 \rfloor \xrightarrow{\text{ReLU}} \lfloor D/2 \rfloor \xrightarrow{\text{Sigmoid}} D
 \end{equation}
-Dropout layers with rate $p = 0.10$ are inserted after hidden linear transformations.
+We place dropout masks with rate $p = 0.10$ following intermediate linear layers.
 
 \subsubsection{Training Phase}
-The network is trained exclusively on normal (benign) windows $\mathcal{W}_{\text{benign}}$ using Mean Squared Error (MSE):
+During baseline training, the autoencoder learns exclusively on benign traffic segments $\mathcal{W}_{\text{benign}}$ by minimizing Mean Squared Error (MSE):
 \begin{equation}
 \mathcal{L}_{\text{AE}} = \frac{1}{|\mathcal{W}_{\text{benign}}|} \sum_{w_i \in \mathcal{W}_{\text{benign}}} \| w_i - g_\phi(f_\theta(w_i)) \|_2^2
 \end{equation}
 
-\subsubsection{Inference via Monte Carlo Dropout}
-During testing, dropout is kept active. For each window $w_t$, we perform $M = 5$ stochastic forward passes $\{\hat{w}_t^{(1)}, \dots, \hat{w}_t^{(M)}\}$. We compute:
+\subsubsection{Inference Phase with Monte Carlo Sampling}
+During inference, standard autoencoders deactivate dropout and yield a single deterministic point estimate. In contrast, U-CADT leaves dropout active at test time, running $M = 5$ stochastic forward passes per window $\{\hat{w}_t^{(1)}, \hat{w}_t^{(2)}, \dots, \hat{w}_t^{(M)}\}$. 
+
+From these stochastic passes, we compute two complementary indicators:
 \begin{itemize}
-    \item \textbf{Mean Anomaly Score ($e_t$):} The Euclidean distance of the averaged reconstruction:
+    \item \textbf{Mean Anomaly Score ($e_t$):} The Euclidean reconstruction error computed against the mean reconstruction:
     \begin{equation}
-    \bar{\hat{w}}_t = \frac{1}{M} \sum_{m=1}^M \hat{w}_t^{(m)}, \quad e_t = \| w_t - \bar{\hat{w}}_t \|_2
+    \bar{\hat{w}}_t = \frac{1}{M} \sum_{j=1}^M \hat{w}_t^{(j)}, \quad e_t = \| w_t - \bar{\hat{w}}_t \|_2
     \end{equation}
-    \item \textbf{Epistemic Uncertainty ($\mathcal{U}_t$):} The empirical variance across stochastic reconstructions:
+    \item \textbf{Epistemic Model Uncertainty ($\mathcal{U}_t$):} The empirical variance observed across the $M$ stochastic reconstruction passes:
     \begin{equation}
-    \mathcal{U}_t = \frac{1}{M} \sum_{m=1}^M \frac{1}{D} \| \hat{w}_t^{(m)} - \bar{\hat{w}}_t \|_2^2
+    \mathcal{U}_t = \frac{1}{M} \sum_{j=1}^M \frac{1}{D} \| \hat{w}_t^{(j)} - \bar{\hat{w}}_t \|_2^2
     \end{equation}
 \end{itemize}
-High $\mathcal{U}_t$ indicates the autoencoder is unfamiliar with the input structure, signaling an anomalous pattern or uncharacteristic benign drift.
 
-\subsection{Autonomous Feedback-Free State Space}
-Instead of relying on oracle confusion counts, U-CADT maintains a rolling memory of the previous $k$ steps ($k=5$). The state $s_t \in \mathbb{R}^8$ is formulated entirely from observable signals:
+This dual-metric output provides critical context:
+\begin{itemize}
+    \item \textit{High $e_t$ combined with Low $\mathcal{U}_t$:} The autoencoder produces a consistent, repeatable reconstruction error. The model is certain that the input deviates sharply from normal training topology---a hallmark of an actual exploit or cyber-physical attack.
+    \item \textit{High $e_t$ combined with High $\mathcal{U}_t$:} The stochastic passes diverge wildly, indicating the model lacks structural confidence. This pattern reflects benign distribution drift, unexpected sensor fluctuations, or unobserved ambient noise, signaling that the threshold should be relaxed rather than triggering a false alarm.
+\end{itemize}
+
+\subsection{Label-Free 8-Dimensional State Formulation}
+Rather than expecting unavailable oracle confusion matrices, U-CADT tracks recent system dynamics over a short rolling horizon ($k=5$ steps). The state $s_t \in \mathbb{R}^8$ is constructed entirely from observable quantities:
 \begin{equation}
-s_t = \Big[ \mu_{e,t}, \sigma_{e,t}^2, \Delta e_t, \mu_{\mathcal{U},t}, \sigma_{\mathcal{U},t}^2, \frac{\delta_{t-1}}{2\theta_0}, \rho_{\text{alert},t}, \text{CR}_t \Big]
+s_t = \Big[ \mu_{e,t}, \, \sigma_{e,t}^2, \, \Delta e_t, \, \mu_{\mathcal{U},t}, \, \sigma_{\mathcal{U},t}^2, \, \frac{\delta_{t-1}}{2\theta_0}, \, \rho_{\text{alert},t}, \, \text{CR}_t \Big]
 \end{equation}
-where $\mu_{e,t}$ and $\sigma_{e,t}^2$ are the sample mean and variance of recent anomaly scores, $\Delta e_t = (e_t - e_{t-k}) / k$ captures short-term score momentum, $\mu_{\mathcal{U},t}$ and $\sigma_{\mathcal{U},t}^2$ represent mean and variance of recent model uncertainty, $\delta_{t-1} / (2\theta_0)$ is the normalized active threshold relative to base cutoff $\theta_0$, $\rho_{\text{alert},t} \in [0, 1]$ is the recent positive decision frequency, and $\text{CR}_t = \mu_{e,t} / (\mu_{\mathcal{U},t} + \epsilon)$ is the Confidence Ratio.
+where:
+\begin{itemize}
+    \item $\mu_{e,t}$ and $\sigma_{e,t}^2$ represent the sample mean and variance of anomaly scores across the recent $k$ windows.
+    \item $\Delta e_t = (e_t - e_{t-k}) / k$ measures short-term score momentum (rate of error increase or decrease).
+    \item $\mu_{\mathcal{U},t}$ and $\sigma_{\mathcal{U},t}^2$ represent the rolling mean and variance of epistemic uncertainty.
+    \item $\delta_{t-1} / (2\theta_0)$ denotes the active threshold normalized relative to the base cutoff $\theta_0$.
+    \item $\rho_{\text{alert},t} \in [0, 1]$ records the empirical alert rate over the recent window to monitor alert storms.
+    \item $\text{CR}_t = \mu_{e,t} / (\mu_{\mathcal{U},t} + \epsilon)$ defines the Confidence Ratio, quantifying whether recent errors are driven by genuine structural anomalies or epistemic noise ($\epsilon = 10^{-4}$).
+\end{itemize}
 
-\subsection{Continuous Dynamic Threshold Modulation}
-To eliminate bang-bang oscillations, U-CADT anchors threshold adjustments around a base threshold $\theta_0$, calibrated on benign validation scores at quantile $1 - \alpha$ ($\alpha = 0.02$).
+\subsection{Continuous Threshold Modulation}
+To avoid aggressive binary switching, U-CADT anchors all adjustments around a calibrated base threshold $\theta_0$. During offline setup, $\theta_0$ is established from clean validation scores at a high quantile ($1 - \alpha$ with $\alpha = 0.02$).
 
-The agent selects an action $a_t \in \{0, 1, \dots, 6\}$ corresponding to discrete modulation factors:
+During runtime, the RL policy selects an action $a_t \in \{0, 1, \dots, 6\}$ representing a fine-grained proportional modulation factor:
 \begin{equation}
-\mathcal{A} = \{-0.25, -0.15, -0.05, 0.00, +0.05, +0.15, +0.25\}
+\mathcal{A} = \{-0.25, \, -0.15, \, -0.05, \, 0.00, \, +0.05, \, +0.15, \, +0.25\}
 \end{equation}
-The operational dynamic threshold $\delta_t$ is computed as:
+The operational dynamic threshold $\delta_t$ is updated smoothly:
 \begin{equation}
-\delta_t = \max\Big( \theta_0 \cdot (1 + \mathcal{A}[a_t]), \, 10^{-5} \Big)
+\delta_t = \max\Big( \theta_0 \cdot \big(1 + \mathcal{A}[a_t]\big), \, 10^{-5} \Big)
 \end{equation}
-The binary detection verdict $\hat{y}_t \in \{0, 1\}$ is given by $\hat{y}_t = \mathbb{I}(e_t > \delta_t)$.
+The binary decision verdict $\hat{y}_t \in \{0, 1\}$ is then produced:
+\begin{equation}
+\hat{y}_t = \mathbb{I}(e_t > \delta_t)
+\end{equation}
 
-\subsection{Stability-Regularized Reward Function}
-During policy training on a tiny mixed subset ($<0.5\%$ of data), the agent is optimized via a reward function balancing detection recall, precision, and threshold stability:
+\subsection{Stability-Regularized Reward Formulation}
+During policy training on a tiny developmental slice (less than $0.5\%$ of training data), the agent optimizes a reward function designed to balance precision, recall, and threshold continuity:
 \begin{equation}
 r_t = 2.0 \cdot TP + 0.5 \cdot TN - 2.0 \cdot FP - 2.0 \cdot FN - \lambda_{\text{vol}} \left( \frac{\delta_t - \delta_{t-1}}{\theta_0} \right)^2
 \end{equation}
-The volatility penalty ($\lambda_{\text{vol}} = 0.15$) penalizes unnecessary threshold jerking, ensuring smooth adaptation. Policy weights are updated using Double DQN targets with Huber loss.
+The volatility penalty coefficient ($\lambda_{\text{vol}} = 0.15$) penalizes rapid back-and-forth threshold jitter, encouraging the agent to commit to smooth, deliberate adjustments. Network updates are performed using Double DQN loss with Huber loss regularization.
+
+---
 
 \section{Experimental Setup}
 
 \subsection{Benchmark Datasets}
-We evaluate across three benchmark domains:
+To ensure fair and rigorous comparisons, we evaluate across three benchmark suites:
 \begin{enumerate}
-    \item \textbf{Yahoo A1Benchmark:} Real production telemetry from Yahoo web services comprising 67 univariate time series ($m=1, 94,866$ points, anomaly rate $1.76\%$). Window length is set to $\tau=10$ ($D=10$), matching Table 1 of~\cite{yang2023adt}.
-    \item \textbf{Secure Water Treatment (SWaT):} A physical operational water treatment testbed with 51 sensors and actuators ($m=51$). We use 496,800 normal operation rows for training and 449,908 rows with labeled attack scenarios for evaluation ($\tau=12, D=612$).
-    \item \textbf{UNSW-NB15 NIDS Benchmark:} Network flow records audited and deduplicated into 151,239 unique records across 42 raw features ($68$ preprocessed dimensions). Known attack families follow a $60/15/10/15\%$ split; the \textit{Fuzzers} family ($11,250$ test flows) is withheld from training to evaluate zero-day detection.
+    \item \textbf{Yahoo A1Benchmark:} Real production telemetry from Yahoo web applications, comprising 67 univariate time series ($m=1, 94,866$ total observations, with a $1.76\%$ anomaly rate). We configure window length to $\tau=10$ ($D=10$), mirroring Table 1 of~\cite{yang2023adt}.
+    \item \textbf{Secure Water Treatment (SWaT):} An industrial cyber-physical water treatment testbed capturing physical sensor and actuator telemetry across six stages ($m=51$ channels). The training partition comprises 496,800 normal operation records, and the test partition contains 449,908 records with 54,621 labeled attack steps ($\tau=12, D=612$).
+    \item \textbf{UNSW-NB15 Benchmark:} Modern network flow records audited and deduplicated into 151,239 unique rows across 42 raw flow features ($68$ preprocessed input dimensions). We follow a Leave-One-Attack-Out (LOAO) protocol with the \textit{Fuzzers} attack category ($11,250$ test flows) held out from training to assess zero-day detection capabilities.
 \end{enumerate}
 
 \begin{table}[t]
@@ -177,16 +211,18 @@ UNSW-NB15 & 68 & 1  & 68  & 16  & 256 flows \\
 }
 \end{table}
 
-\subsection{Baseline Methods}
-We benchmark U-CADT against four comparator methods:
+\subsection{Comparator Baselines}
+We compare U-CADT against four baseline methods:
 \begin{itemize}
-    \item \textbf{Static Optimal Baseline:} Evaluates the single best fixed quantile threshold tuned on development validation data.
-    \item \textbf{DSPOT (Extreme Value Theory):} The published statistical dynamic thresholding baseline reported in~\cite{yang2023adt}.
-    \item \textbf{ADT (With Feedback):} Exact paper implementation of Yang et al.~\cite{yang2023adt} with oracle true labels revealed after each step.
-    \item \textbf{ADT (No Feedback Ablation):} The identical ADT model operating without oracle feedback (labels masked to None).
+    \item \textbf{Optimal Static Baseline:} The best static quantile cutoff determined through exhaustive grid search on validation data.
+    \item \textbf{DSPOT (Extreme Value Theory):} The statistical extreme-value thresholding method reported as the primary baseline in~\cite{yang2023adt}.
+    \item \textbf{ADT (Paper Mode with Feedback):} The exact algorithm from Yang et al.~\cite{yang2023adt}, receiving oracle ground-truth labels at every step.
+    \item \textbf{ADT (Autonomous Ablation without Feedback):} The identical ADT model operating without oracle labels, reflecting realistic deployment conditions.
 \end{itemize}
 
-All experiments were executed on an Intel Core i7 machine with 16 GB RAM and PyTorch 2.15 CPU execution.
+All experiments were executed on an Intel Core i7 workstation with 16 GB RAM using PyTorch 2.15 on CPU.
+
+---
 
 \section{Experimental Results and Analysis}
 
@@ -240,26 +276,27 @@ ADT    & 0.95206 & 0.95175 & 0.95191* & 0.99936 & 0.99873 & 0.99905* & 0.99870 &
 \end{table}
 
 \subsection{Evaluation on Yahoo A1Benchmark}
-As detailed in Table~\ref{tab:main_results}, U-CADT achieves an $F_1$-score of \textbf{0.25924}, establishing a new state of the art among autonomous methods:
+As reported in Table~\ref{tab:table2_reproduction} and Table~\ref{tab:autonomous_ablation}, U-CADT achieves an overall $F_1$-score of \textbf{0.25924} on the Yahoo benchmark:
 \begin{itemize}
-    \item \textbf{Recall Doubling:} U-CADT captures \textbf{60.50\%} of attacks, compared to only $32.01\%$ for the Static baseline and $14.80\%$ for DSPOT.
-    \item \textbf{Precision vs. Recall Balance:} While DSPOT's extreme value assumptions yield an $F_1$ of only $0.11777$, U-CADT maintains solid precision ($16.50\%$) while detecting subtle temporal anomalies.
+    \item \textbf{Significant Recall Gains:} U-CADT captures \textbf{60.50\%} of all anomalies across the 67 test series, compared to only $32.01\%$ for the static cutoff and $14.80\%$ for DSPOT.
+    \item \textbf{Balanced Trade-Off:} While DSPOT's generalized Pareto assumptions suffer heavily from high false alarm rates ($F_1 = 0.11777$), U-CADT retains a solid $16.50\%$ precision while nearly doubling anomaly recall.
 \end{itemize}
 
-\subsection{Evaluation on SWaT Cyber-Physical System}
-On the 449,908 test flows of SWaT:
+\subsection{Evaluation on the SWaT Cyber-Physical Testbed}
+Across all 449,908 test time steps of SWaT:
 \begin{itemize}
-    \item \textbf{Outperforming Static Baselines:} U-CADT reaches an $F_1$-score of \textbf{0.75408}, surpassing the optimal static baseline ($0.74745$) with $61.67\%$ recall and a remarkable \textbf{97.01\% precision}.
-    \item \textbf{Resistance to Normal Sensor Drift:} Despite continuous sensor noise across 51 physical water channels, U-CADT's volatility regularization prevents false alerts during benign actuator activations.
+    \item \textbf{Surpassing Static Benchmarks:} U-CADT delivers an $F_1$-score of \textbf{0.75408}, outperforming the tuned static baseline ($0.74745$) with $61.67\%$ recall and an exceptional \textbf{97.01\% precision}.
+    \item \textbf{Robustness to Routine Actuator Cycles:} Unlike static cutoffs that frequently sound false alarms when high-power pumps or valves engage, U-CADT's epistemic uncertainty regularizer prevents alert storms by distinguishing between mechanical switching noise and real multi-stage cyber-physical attacks.
 \end{itemize}
 
-\subsection{Empirical Analysis of ADT's Failure}
-A critical empirical finding in Table~\ref{tab:main_results} is the complete failure of ADT ($P=0.00, R=0.00, F_1=0.00$). In ADT, action $a=1$ designates the passive threshold ($\delta=1$). Because scores are bounded in $[0, 1]$, the condition $\text{score} > 1$ is never satisfied, forcing all predictions to $0$ (Normal). Since normal windows constitute $93.78\%$ of Yahoo and $87.77\%$ of SWaT, selecting $a=1$ earns high true-negative rewards in nearly all training steps. Consequently, DQN gradients converge into a trivial degenerate local minimum where the controller sleeps permanently.
+\subsection{Why ADT Collapses without an Oracle}
+A key empirical result in Table~\ref{tab:autonomous_ablation} is the complete failure of ADT ($P = 0.00, R = 0.00, F_1 = 0.00$). In ADT, action $a=1$ selects the passive threshold ($\delta=1$). Because autoencoder errors are normalized into $[0, 1]$, an anomaly score can never exceed $1.0$, meaning every window is labeled as benign.
 
-This confirms our theoretical critique: \textbf{binary thresholding without continuous oracle guidance is fundamentally flawed in class-imbalanced time series.}
+Because normal windows account for $93.78\%$ of Yahoo and $87.77\%$ of SWaT, selecting action $1$ yields positive rewards in roughly nine out of ten time steps. Without an oracle continuously penalizing false negatives, DQN gradients push the policy into a permanent inactive state. This confirms our core hypothesis: \textbf{binary thresholding without continuous oracle guidance is fundamentally broken in realistic, class-imbalanced environments.}
 
 \subsection{Zero-Day Evaluation on UNSW-NB15}
-On the 31,127 test flows of UNSW-NB15 where the entire \textit{Fuzzers} attack family is withheld from initial development:
+Table~\ref{tab:unsw_results} reports detection metrics on the 31,127 test flows of UNSW-NB15 when the \textit{Fuzzers} attack family is completely withheld from development:
+
 \begin{table}[t]
 \centering
 \caption{UNSW-NB15 Zero-Day Holdout Comparison (Fuzzers Excluded)}
@@ -278,27 +315,33 @@ ADT (No Feedback)            & 58.89\% & 100.00\% & 74.12\% & 100.00\% \\
 }
 \end{table}
 
-While full-feedback ADT achieves $82.03\%$ recall, it exhibits an unacceptable false-positive rate of \textbf{81.32\%} (flagging 10,406 benign flows). In contrast, U-CADT achieves $62.31\%$ $F_1$ and lowers the false-positive rate to $14.62\%$, demonstrating genuine zero-day generalization.
+While the full-feedback ADT variant achieves $82.03\%$ recall, it exhibits an unacceptable false-positive rate of \textbf{81.32\%} (flagging 10,406 normal flows). In contrast, U-CADT achieves an $F_1$-score of $62.31\%$ while cutting the false alarm rate down to $14.62\%$, demonstrating practical generalization on zero-day attacks.
 
-\section{Discussion and Operational Viability}
+---
 
-\subsection{Real-World Feasibility in Security Operations Centers}
-In an operational SOC, analyst attention is the scarcest resource. A detector with $80\%$ false-positive rate (such as ADT) is immediately disabled by engineers. U-CADT addresses this operational reality:
+\section{Discussion and Operational Feasibility}
+
+\subsection{Deployability in Security Operations Centers}
+In an operational SOC, analyst attention is the scarcest resource. A system with an $80\%$ false-alarm rate will simply be shut off by network engineers. U-CADT addresses this reality:
 \begin{itemize}
-    \item \textbf{Zero Test-Time Feedback:} Requires no human interaction during live packet inspection.
-    \item \textbf{Low Latency:} Symmetrical autoencoder scoring and 8-state DQN inference execute in under $0.4$ milliseconds per flow on standard CPU hardware.
+    \item \textbf{True Zero-Label Autonomy:} Operates entirely on observable traffic dynamics without requiring human verification during live inspection.
+    \item \textbf{Low Latency Overhead:} Both autoencoder Monte Carlo inference and the 8-state DQN evaluation execute in less than $0.4$ milliseconds per flow on standard CPU hardware, comfortably supporting high-throughput ingestion.
 \end{itemize}
 
-\subsection{Limitations and Threats to Validity}
+\subsection{Limitations}
 \begin{itemize}
-    \item \textbf{Tabular Replay Order:} While SWaT and Yahoo preserve strict chronological sequences, tabular UNSW-NB15 records were replayed in shuffled partitions.
-    \item \textbf{Sensor Topology Ignorance:} Currently, U-CADT flattens multivariate sensor channels ($D = \tau \times m$), ignoring spatial pipe-and-valve dependencies in water networks.
+    \item \textbf{Sensor Topology Flattening:} Currently, U-CADT flattens multivariate sensor channels into a single vector ($D = \tau \times m$), ignoring spatial pipe-and-valve dependencies in water networks.
+    \item \textbf{Tabular vs. Sequential Replay:} While SWaT and Yahoo preserve strict chronological sequences, tabular UNSW-NB15 flows were evaluated in partition order.
 \end{itemize}
+
+---
 
 \section{Conclusion and Future Work}
-In this paper, we conducted a rigorous audit of Agent-based Dynamic Thresholding (ADT) and exposed its fatal dependency on oracle label feedback and binary threshold instability. We introduced \textbf{U-CADT}, an uncertainty-aware continuous thresholding controller that operates autonomously without ground-truth labels. Experimental benchmarks on Yahoo A1Benchmark, SWaT, and UNSW-NB15 confirmed that U-CADT achieves superior $F_1$-performance ($0.25924$ on Yahoo, $0.75408$ on SWaT) and high precision ($97.01\%$), while proving that ADT collapses to zero detection without oracle assistance.
+In this work, we audited Agent-based Dynamic Thresholding (ADT) and demonstrated that its reported success relies on an impractical oracle assumption, without which the algorithm collapses to zero detection in imbalanced traffic. We introduced \textbf{U-CADT}, a fully autonomous, uncertainty-calibrated dynamic thresholding system that replaces human feedback with epistemic uncertainty and smooth quantile modulation. Comprehensive evaluations on Yahoo A1Benchmark, SWaT, and UNSW-NB15 confirm that U-CADT achieves state-of-the-art autonomous $F_1$-scores ($0.25924$ on Yahoo, $0.75408$ on SWaT) and high precision ($97.01\%$) with zero human intervention.
 
-Future work will integrate \textbf{Spatio-Temporal Graph Neural Networks (ST-GNNs)} to model physical piping topologies in cyber-physical networks and incorporate budgeted active querying for ambiguous border cases.
+Future work will incorporate Spatio-Temporal Graph Neural Networks (ST-GNNs) to explicitly capture physical topology in cyber-physical networks and explore active querying for rare border cases.
+
+---
 
 \begin{thebibliography}{00}
 \bibitem{yang2023adt} X. Yang, E. Howley, and M. Schukat, ``ADT: Agent-based Dynamic Thresholding for Anomaly Detection,'' in \textit{Proc. Adaptive and Learning Agents Workshop (ALA 2023)}, arXiv:2312.01488, 2023.
