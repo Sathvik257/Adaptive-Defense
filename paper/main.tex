@@ -160,19 +160,21 @@ We evaluate across three benchmark domains:
     \item \textbf{UNSW-NB15 NIDS Benchmark:} Network flow records audited and deduplicated into 151,239 unique records across 42 raw features ($68$ preprocessed dimensions). Known attack families follow a $60/15/10/15\%$ split; the \textit{Fuzzers} family ($11,250$ test flows) is withheld from training to evaluate zero-day detection.
 \end{enumerate}
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
 \caption{ADT and U-CADT Parameter Configurations}
 \label{tab:parameters}
-\begin{tabular}{lcccccc}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
 \toprule
 \textbf{Dataset} & \textbf{Channels ($m$)} & \textbf{Window ($\tau$)} & \textbf{Dim ($D$)} & \textbf{Latent ($Z$)} & \textbf{RL Subset} \\
 \midrule
-Yahoo & 1 & 10 & 10 & 3 & 256 windows \\
-SWaT & 51 & 12 & 612 & 100 & 494 windows \\
-UNSW-NB15 & 68 & 1 & 68 & 16 & 256 flows \\
+Yahoo     & 1  & 10 & 10  & 3   & 256 win. \\
+SWaT      & 51 & 12 & 612 & 100 & 494 win. \\
+UNSW-NB15 & 68 & 1  & 68  & 16  & 256 flows \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \subsection{Baseline Methods}
@@ -193,6 +195,7 @@ All experiments were executed on an Intel Core i7 machine with 16 GB RAM and PyT
 \caption{Performance comparison on each dataset matching Table 2 of Yang et al.~\cite{yang2023adt}, with our proposed autonomous U-CADT method included as the fourth row. Precision ($P$), Recall ($R$), and F1-score ($F1$) are reported.}
 \label{tab:table2_reproduction}
 \label{tab:main_results}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccccccc}
 \toprule
  & \multicolumn{3}{c}{\textbf{Yahoo}} & \multicolumn{3}{c}{\textbf{SWaT}} & \multicolumn{3}{c}{\textbf{WADI}} \\
@@ -207,30 +210,33 @@ ADT    & 0.95206 & 0.95175 & 0.95191* & 0.99936 & 0.99873 & 0.99905* & 0.99870 &
 \bottomrule
 \multicolumn{10}{l}{\footnotesize{* Published ADT metrics rely on continuous test-time oracle ground-truth supervision ($y_t$). Without oracle feedback, ADT collapses to $F1 = 0.00000$.}} \\
 \multicolumn{10}{l}{\footnotesize{\dag \textbf{U-CADT (Ours)} operates with \textbf{100\% autonomy} (zero feedback), surpassing static baselines on SWaT and nearly doubling recall on Yahoo.}}
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
-\caption{Local Empirical Audit: Autonomous Performance without Oracle Feedback}
+\caption{Empirical Audit: Autonomous Performance (No Oracle Feedback)}
 \label{tab:autonomous_ablation}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{llcccc}
 \toprule
-\textbf{Dataset} & \textbf{Method} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Autonomy} \\
+\textbf{Dataset} & \textbf{Method} & \textbf{Prec.} & \textbf{Recall} & \textbf{F1} & \textbf{Autonomy} \\
 \midrule
 \multirow{4}{*}{\textbf{Yahoo}} 
- & Static (Optimal Baseline)  & 0.18706 & 0.32007 & 0.23612 & Autonomous \\
- & DSPOT / EVT Baseline       & 0.09781 & 0.14796 & 0.11777 & Autonomous \\
- & ADT (No Feedback Ablation) & 0.00000 & 0.00000 & 0.00000 & Collapsed \\
- & \textbf{U-CADT (Our Method)} & \textbf{0.16496} & \textbf{0.60496} & \textbf{0.25924} & \textbf{100\% Autonomous} \\
+ & Static Baseline            & 0.18706 & 0.32007 & 0.23612 & Autonomous \\
+ & DSPOT Baseline             & 0.09781 & 0.14796 & 0.11777 & Autonomous \\
+ & ADT (No Feedback)          & 0.00000 & 0.00000 & 0.00000 & \textbf{Collapsed} \\
+ & \textbf{U-CADT (Ours)}     & \textbf{0.16496} & \textbf{0.60496} & \textbf{0.25924} & \textbf{100\% Auto} \\
 \midrule
 \multirow{4}{*}{\textbf{SWaT}} 
- & Static (Optimal Baseline)  & 0.99061 & 0.60013 & 0.74745 & Autonomous \\
- & DSPOT / EVT Baseline       & 0.98347 & 0.63913 & 0.77476 & Autonomous \\
- & ADT (No Feedback Ablation) & 0.00000 & 0.00000 & 0.00000 & Collapsed \\
- & \textbf{U-CADT (Our Method)} & \textbf{0.97014} & \textbf{0.61673} & \textbf{0.75408} & \textbf{100\% Autonomous} \\
+ & Static Baseline            & 0.99061 & 0.60013 & 0.74745 & Autonomous \\
+ & DSPOT Baseline             & 0.98347 & 0.63913 & 0.77476 & Autonomous \\
+ & ADT (No Feedback)          & 0.00000 & 0.00000 & 0.00000 & \textbf{Collapsed} \\
+ & \textbf{U-CADT (Ours)}     & \textbf{0.97014} & \textbf{0.61673} & \textbf{0.75408} & \textbf{100\% Auto} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \subsection{Evaluation on Yahoo A1Benchmark}
@@ -254,20 +260,22 @@ This confirms our theoretical critique: \textbf{binary thresholding without cont
 
 \subsection{Zero-Day Evaluation on UNSW-NB15}
 On the 31,127 test flows of UNSW-NB15 where the entire \textit{Fuzzers} attack family is withheld from initial development:
-\begin{table}[h]
+\begin{table}[t]
 \centering
 \caption{UNSW-NB15 Zero-Day Holdout Comparison (Fuzzers Excluded)}
 \label{tab:unsw_results}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
 \textbf{Method} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{FPR} \\
 \midrule
 Static AE (Validation $F_1$) & 74.71\% & 47.61\% & 58.16\% & 23.08\% \\
-ADT (Full Feedback) & 59.10\% & 82.03\% & 68.70\% & 81.32\% \\
-ADT (No Feedback) & 58.89\% & 100.00\% & 74.12\% & 100.00\% \\
-\textbf{U-CADT (Proposed)} & \textbf{76.82\%} & \textbf{52.44\%} & \textbf{62.31\%} & \textbf{14.62\%} \\
+ADT (Full Feedback)          & 59.10\% & 82.03\% & 68.70\% & 81.32\% \\
+ADT (No Feedback)            & 58.89\% & 100.00\% & 74.12\% & 100.00\% \\
+\textbf{U-CADT (Proposed)}   & \textbf{76.82\%} & \textbf{52.44\%} & \textbf{62.31\%} & \textbf{14.62\%} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 While full-feedback ADT achieves $82.03\%$ recall, it exhibits an unacceptable false-positive rate of \textbf{81.32\%} (flagging 10,406 benign flows). In contrast, U-CADT achieves $62.31\%$ $F_1$ and lowers the false-positive rate to $14.62\%$, demonstrating genuine zero-day generalization.
